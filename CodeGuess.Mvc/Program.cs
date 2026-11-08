@@ -1,7 +1,12 @@
+using CodeGuess.Mvc.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHttpClient("Api", client =>
-    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"]!));
+// Each service gets its own HttpClient pointed at the API
+var apiBaseUrl = new Uri(builder.Configuration["ApiBaseUrl"]!);
+
+builder.Services.AddHttpClient<IDeckService, DeckService>(client => client.BaseAddress = apiBaseUrl);
+builder.Services.AddHttpClient<IGameService, GameService>(client => client.BaseAddress = apiBaseUrl);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
