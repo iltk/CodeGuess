@@ -1,0 +1,11 @@
+@model CodeGuess.Mvc.DTOs.JoinGameDto
+
+<form asp-controller="Play" asp-action="Join" method="post">
+
+    <input asp-for="Code" placeholder="Game code" />
+
+    <input asp-for="Nickname" placeholder="Nickname" />
+
+    <button type="submit">Join</button>
+
+</form>

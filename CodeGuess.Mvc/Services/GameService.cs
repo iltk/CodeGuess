@@ -21,4 +21,10 @@ public class GameService : IGameService
 
         return await response.Content.ReadFromJsonAsync<GameSessionDto>();
     }
+    
+    public async Task<bool> JoinGameAsync(JoinGameDto dto)                                                                                                                             
+    {                                                                                                                                                                                  
+        var response = await _http.PostAsJsonAsync($"api/game/{dto.Code}/join", dto);                                                                                               
+        return response.IsSuccessStatusCode;                                                                                                                                           
+    }  
 }
