@@ -16,4 +16,7 @@ public class GameSession
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public Deck Deck { get; set; } = null!;
+    
+    public ICollection<Player> Players { get; set; } = new List<Player>();
+
 }

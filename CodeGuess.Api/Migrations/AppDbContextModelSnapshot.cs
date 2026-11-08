@@ -87,6 +87,32 @@ namespace CodeGuess.Api.Migrations
                     b.ToTable("GameSessions");
                 });
 
+            modelBuilder.Entity("CodeGuess.Api.Models.Player", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GameSessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nickname")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Score")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameSessionId");
+
+                    b.ToTable("Players");
+                });
+
             modelBuilder.Entity("CodeGuess.Api.Models.Question", b =>
                 {
                     b.Property<int>("Id")
@@ -130,6 +156,17 @@ namespace CodeGuess.Api.Migrations
                     b.Navigation("Deck");
                 });
 
+            modelBuilder.Entity("CodeGuess.Api.Models.Player", b =>
+                {
+                    b.HasOne("CodeGuess.Api.Models.GameSession", "GameSession")
+                        .WithMany("Players")
+                        .HasForeignKey("GameSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("GameSession");
+                });
+
             modelBuilder.Entity("CodeGuess.Api.Models.Question", b =>
                 {
                     b.HasOne("CodeGuess.Api.Models.Deck", "Deck")
@@ -144,6 +181,11 @@ namespace CodeGuess.Api.Migrations
             modelBuilder.Entity("CodeGuess.Api.Models.Deck", b =>
                 {
                     b.Navigation("Questions");
+                });
+
+            modelBuilder.Entity("CodeGuess.Api.Models.GameSession", b =>
+                {
+                    b.Navigation("Players");
                 });
 
             modelBuilder.Entity("CodeGuess.Api.Models.Question", b =>
