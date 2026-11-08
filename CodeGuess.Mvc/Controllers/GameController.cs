@@ -1,3 +1,4 @@
+using CodeGuess.Mvc.Models;
 using CodeGuess.Mvc.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -40,10 +41,8 @@ public class GameController : Controller
     [HttpGet]
     public IActionResult Lobby(string code, int sessionId)
     {
-        ViewBag.Code = code;
-        ViewBag.SessionId = sessionId;
-        
-        return View();
+        var model = new LobbyViewModel { Code = code };
+        return View(model);
     }
 
     

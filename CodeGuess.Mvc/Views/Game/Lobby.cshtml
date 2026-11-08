@@ -1,0 +1,14 @@
+@model LobbyViewModel
+
+<div id="lobby" data-code="@Model.Code">
+    <h1>Room @Model.Code</h1>
+    <ul id="member-list"></ul>
+    
+    <p id="member-count"></p>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script src="~/js/lobby.js" asp-append-version="true"></script>
+}
+

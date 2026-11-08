@@ -1,0 +1,17 @@
+@model List<Deck>
+
+
+
+<form asp-controller="Game" asp-action="Create" method="post">
+    <select name="DeckId" required>                                                                                                                                                    
+        
+        <option value="">-- Select a deck --</option>
+
+        @foreach (var deck in Model)
+        {
+            <option value="@deck.Id">@deck.Name</option>
+        }
+    </select>
+
+    <button type="submit">Create Game</button>
+</form>
