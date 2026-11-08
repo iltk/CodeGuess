@@ -10,4 +10,5 @@ public class AppDbContext : DbContext
     public DbSet<Deck> Decks { get; set; }
     public DbSet<Question> Questions { get; set; }
     public DbSet<AnswerOption> AnswerOptions { get; set; }
+    public DbSet<GameSession> GameSessions { get; set; }
 }
