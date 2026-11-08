@@ -6,6 +6,8 @@ namespace CodeGuess.Api.Services;
 public interface IGameService
 {
     Task<GameSessionDto?> CreateGameAsync(int deckId);
+    
+    Task JoinGameAsync(JoinGameDto dto);
 
 
 }

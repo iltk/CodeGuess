@@ -1,4 +1,5 @@
 using CodeGuess.Api.DTOs;
+using CodeGuess.Api.Models;
 using CodeGuess.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,6 +14,7 @@ public class GameController : ControllerBase
     public GameController(IGameService gameService)
     {
         _gameService = gameService;
+        
     }
     
 
@@ -27,6 +29,21 @@ public class GameController : ControllerBase
 
         return Ok(session);
     }
+    
+    [HttpPost("{gameCode}/join")]
+    public async Task<ActionResult> JoinGame(JoinGameDto dto)
+    {
+        await _gameService.JoinGameAsync(dto);
+        return Ok();
+    }
+
+   
+
+    
+    
+    
+    
+    
     
     
     
