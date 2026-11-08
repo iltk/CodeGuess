@@ -1,4 +1,5 @@
 using CodeGuess.Api.Data;
+using CodeGuess.Api.Hub;
 using CodeGuess.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,6 +13,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register services
 builder.Services.AddScoped<IDeckService, DeckService>();
 builder.Services.AddScoped<IGameService, GameService>();
+builder.Services.AddSignalR();
+
 
 // API controllers
 builder.Services.AddControllers();
@@ -19,6 +22,13 @@ builder.Services.AddControllers();
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Let the MVC page (5166) connect to the hub
+builder.Services.AddCors(o => o.AddPolicy("MvcClient", p =>
+    p.WithOrigins("http://localhost:5166")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials()));
 
 var app = builder.Build();
 
@@ -42,8 +52,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseCors("MvcClient");
+
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<GameHub>("/hubs/lobby");
 
 app.Run();
