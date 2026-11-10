@@ -1,0 +1,21 @@
+@model LobbyViewModel
+
+<div id="lobby" data-join-code="@Model.JoinCode">
+    <h1>Room @Model.JoinCode</h1>
+    <ul id="member-list"></ul>
+    
+    <p id="member-count"></p>
+    
+    <form asp-controller="Host" asp-action="Start" method="post">                                                                                                                      
+        <input type="hidden" name="joinCode" value="@Model.JoinCode" />                                                                                                                
+        <button type="submit">Start</button>                                                                                                                                           
+    </form>     
+    
+
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script src="~/js/host-lobby.js" asp-append-version="true"></script>
+}
+
