@@ -7,6 +7,8 @@ public class Question
     public int Id { get; set; }
     public int DeckId { get; set; }
     
+    public int Position { get; set; }
+    
     [Required, StringLength(50)]
     public string Code { get; set; } = string.Empty;
 
