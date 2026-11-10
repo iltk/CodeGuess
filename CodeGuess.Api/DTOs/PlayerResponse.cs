@@ -1,6 +1,6 @@
 namespace CodeGuess.Api.DTOs;
 
-public class PlayerDto
+public class PlayerResponse
 {
     public int Id { get; set; }
 
