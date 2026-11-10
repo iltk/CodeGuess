@@ -133,6 +133,41 @@ public class GameService: IGameService
         };
     }
 
+    public async Task<List<PlayerResponse>> GetLeaderBoardAsync(string joinCode)
+    {
+        var session = await _db.GameSessions
+            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
+        
+        if (session == null)
+        {
+            throw new KeyNotFoundException("Game session not found."); 
+        }
+
+        //get players and sort them by their score 
+        var players = await _db.Players
+            .Where(p => p.GameSessionId == session.Id)
+            .OrderByDescending(p => p.Score)
+            .ToListAsync();
+
+        List<PlayerResponse> playerList = new List<PlayerResponse>();
+
+        foreach (var player in players)
+        {
+            playerList.Add(new PlayerResponse
+            {
+                Id = player.Id,
+                Nickname = player.Nickname,
+                GameSessionId = session.Id,
+                Score = player.Score,
+
+            });
+
+        }
+        
+        return playerList;
+    }
+    
+
 
 
     //creates the short codes players type in to join a game                                                                                                                          

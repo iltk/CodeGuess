@@ -6,13 +6,14 @@
     <h1>
         @(Model.Question?.Code ?? "No question found")
     </h1>
-    
+
     @if (Model?.AnswerOptions != null)
     {
+        
         <ul>
             @foreach (var answer in Model.AnswerOptions)
             {
-                <li>@(answer.Text ?? "Not Available")</li>
+                <li id="answer-@answer.Id">@(answer.Text ?? "Not Available")</li>
             }
         </ul>
     }
@@ -20,8 +21,41 @@
     {
         <p>No questions found.</p>
     }
-    
-   
-    
-</main>
 
+    <p id="countdown">
+        00.30
+    </p>
+
+
+</main>
+@section Scripts {
+    <script>
+        
+        // Using Razor helper inside a script block in a .cshtml file
+        const targetUrl = '@Url.Action("LeaderBoard", "Host", new { joinCode = Model.JoinCode })';
+
+       
+
+        const countdown = document.getElementById("countdown");
+        let counter = 10;
+        
+        // unique ID returned by setInterval
+        const myInterval = setInterval(() => {
+            counter = counter - 1;
+            countdown.textContent = `00:${counter}`;
+            
+            //  condition to stop
+            if (counter ===  0) {
+                // Clear the interval using its ID
+                clearInterval(myInterval);
+
+                // Go to the leaderboard page (it returns HTML, so navigate instead of fetch)                                                                                      
+                window.location.href = targetUrl;
+
+                
+                //TODO: remove after testing
+                console.log("Target reached! Timer stopped."); }
+        }, 1000);
+
+    </script>
+}

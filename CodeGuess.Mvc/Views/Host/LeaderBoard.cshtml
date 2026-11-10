@@ -1,0 +1,16 @@
+@model List<CodeGuess.Mvc.DTOs.PlayerResponse>
+
+<main>                                                                                                                                                                             
+      <ul>                                                                                                                                                                           
+          @foreach (var player in Model)                                                                                                                                             
+          {                                                                                                                                                                          
+              <li>@player.Nickname: @player.Score</li>                                                                                                                               
+          }                                                                                                                                                                          
+      </ul>                                                                                                                                                                          
+                      
+      //TODO: implement next method
+      <form asp-controller="Host" asp-action="Next" method="post">                                                                                                                   
+          <input type="hidden" name="joinCode" value="@ViewData["JoinCode"]" />                                                                                                      
+          <button type="submit">Next</button>                                                                                                                                        
+      </form>                                                                                                                                                                        
+  </main> 

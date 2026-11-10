@@ -11,4 +11,6 @@ public interface IGameService
     Task StartGameAsync(string joinCode);
 
     Task<GameResponse> GetGameAsync(string joinCode);
+    
+    Task<List<PlayerResponse>> GetLeaderBoardAsync(string joinCode);
 }

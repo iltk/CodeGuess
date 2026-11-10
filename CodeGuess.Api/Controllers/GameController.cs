@@ -52,4 +52,13 @@ public class GameController : ControllerBase
         var game = await _gameService.GetGameAsync(joinCode);
         return Ok(game);
     }
+
+    [HttpGet("{joinCode}/leaderboard")]
+    public async Task<ActionResult<List<PlayerResponse>>> GetLeaderBoard(string joinCode)                                                                                              
+    {
+        var leaderBoard = await _gameService.GetLeaderBoardAsync(joinCode);
+        
+        return Ok(leaderBoard);
+    }
+    
 }

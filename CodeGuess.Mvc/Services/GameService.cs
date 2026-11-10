@@ -47,4 +47,19 @@ public class GameService : IGameService
 
         return await response.Content.ReadFromJsonAsync<GameResponse>();
     }
+    
+    
+    //call api to get the results 
+    // need player and its place like 1 , 2 ,3 ...
+    //LeaderBoardResponse - list of playersDto 
+    //where player dto will have name score and places soprted 
+    public async Task<List<PlayerResponse>?> GetLeaderBoardAsync(string joinCode)
+    {
+        var response = await _http.GetAsync($"api/game/{joinCode}/leaderboard");
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<List<PlayerResponse>>();
+    }
 }

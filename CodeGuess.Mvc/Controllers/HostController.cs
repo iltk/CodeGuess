@@ -63,4 +63,15 @@ public class HostController : Controller
 
         return View(game);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> LeaderBoard(string joinCode)                                                                                                                      
+    {                                                                                                                                                                                  
+        var result = await _gameService.GetLeaderBoardAsync(joinCode);                                                                                                                 
+        if (result == null)                                                                                                                                                            
+            return RedirectToAction("Index");                                                                                                                                          
+                                                                                                                                                                                     
+        ViewData["JoinCode"] = joinCode;                                                                                                                                               
+        return View(result);                                                                                                                                                           
+    }  
 }
