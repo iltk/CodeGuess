@@ -1,4 +1,4 @@
-using CodeGuess.Mvc.Models;
+using CodeGuess.Mvc.DTOs;
 
 namespace CodeGuess.Mvc.Services;
 
@@ -12,8 +12,8 @@ public class DeckService : IDeckService
         _http = http;
     }
 
-    public async Task<List<Deck>> GetDecksAsync()
+    public async Task<List<DeckResponse>> GetDecksAsync()
     {
-        return await _http.GetFromJsonAsync<List<Deck>>("api/deck") ?? new();
+        return await _http.GetFromJsonAsync<List<DeckResponse>>("api/deck") ?? new();
     }
 }

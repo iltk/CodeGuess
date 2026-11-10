@@ -1,8 +1,8 @@
-using CodeGuess.Mvc.Models;
+using CodeGuess.Mvc.DTOs;
 
 namespace CodeGuess.Mvc.Services;
 
 public interface IDeckService
 {
-    Task<List<Deck>> GetDecksAsync();
+    Task<List<DeckResponse>> GetDecksAsync();
 }
