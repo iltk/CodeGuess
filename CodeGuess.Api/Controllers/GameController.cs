@@ -1,5 +1,4 @@
 using CodeGuess.Api.DTOs;
-using CodeGuess.Api.Models;
 using CodeGuess.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,43 +10,46 @@ namespace CodeGuess.Api.Controllers;
 public class GameController : ControllerBase
 {
     private readonly IGameService _gameService;
+
     public GameController(IGameService gameService)
     {
         _gameService = gameService;
-        
     }
-    
 
-    // POST api/game/3
-    [HttpPost("{deckId:int}")] 
-    public async Task<ActionResult<GameSessionDto>> Create(int deckId)
+
+    // POST api/game   body: { "deckId": 3 }
+    [HttpPost]
+    public async Task<ActionResult<GameResponse>> CreateGame(CreateGameRequest request)
     {
-        var session = await _gameService.CreateGameAsync(deckId);
+        var game = await _gameService.CreateGameAsync(request.DeckId);
 
-        if (session == null)
-            return NotFound($"Deck {deckId} not found");
+        if (game == null)
+            return NotFound($"Deck {request.DeckId} not found");
 
-        return Ok(session);
+        return Ok(game);
     }
-    
-    [HttpPost("{gameCode}/join")]
-    public async Task<ActionResult> JoinGame(JoinGameDto dto)
+
+    // POST api/game/ABCD/join   body: { "nickname": "Sam" }
+    [HttpPost("{joinCode}/join")]
+    public async Task<ActionResult> JoinGame(string joinCode, JoinGameRequest request)
     {
-        await _gameService.JoinGameAsync(dto);
+        await _gameService.JoinGameAsync(joinCode, request);
         return Ok();
     }
 
-   
+    // POST api/game/ABCD/start
+    [HttpPost("{joinCode}/start")]
+    public async Task<ActionResult> StartGame(string joinCode)
+    {
+        await _gameService.StartGameAsync(joinCode);
+        return Ok();
+    }
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    // GET api/game/ABCD
+    [HttpGet("{joinCode}")]
+    public async Task<ActionResult<GameResponse>> GetGame(string joinCode)
+    {
+        var game = await _gameService.GetGameAsync(joinCode);
+        return Ok(game);
+    }
 }

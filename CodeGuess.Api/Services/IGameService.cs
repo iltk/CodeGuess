@@ -1,13 +1,14 @@
 using CodeGuess.Api.DTOs;
-using CodeGuess.Api.Models;
 
 namespace CodeGuess.Api.Services;
 
 public interface IGameService
 {
-    Task<GameSessionDto?> CreateGameAsync(int deckId);
-    
-    Task JoinGameAsync(JoinGameDto dto);
+    Task<GameResponse?> CreateGameAsync(int deckId);
 
+    Task JoinGameAsync(string joinCode, JoinGameRequest request);
 
+    Task StartGameAsync(string joinCode);
+
+    Task<GameResponse> GetGameAsync(string joinCode);
 }
