@@ -1,0 +1,27 @@
+@model CodeGuess.Mvc.DTOs.GameResponse
+
+
+<main>
+    
+    <h1>
+        @(Model.Question?.Code ?? "No question found")
+    </h1>
+    
+    @if (Model?.AnswerOptions != null)
+    {
+        <ul>
+            @foreach (var answer in Model.AnswerOptions)
+            {
+                <li>@(answer.Text ?? "Not Available")</li>
+            }
+        </ul>
+    }
+    else
+    {
+        <p>No questions found.</p>
+    }
+    
+   
+    
+</main>
+
