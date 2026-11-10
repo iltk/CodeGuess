@@ -1,8 +1,8 @@
 namespace CodeGuess.Mvc.DTOs;
 
-public class JoinGameDto
+public class JoinGameRequest
 {
-    public string Code { get; set; } = string.Empty;
+    public string JoinCode { get; set; } = string.Empty;
     
     public string Nickname { get; set; } = string.Empty;
 }

@@ -21,19 +21,19 @@ public class PlayController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Join(JoinGameDto dto)                                                                                                                             
+    public async Task<IActionResult> Join(JoinGameRequest request)                                                                                                                             
     {                  
         // TODO: return a better msg screen
-        if (!await _gameService.JoinGameAsync(dto))                                                                                                                                    
-            return View("Index", dto);                                                                                                                                                 
+        if (!await _gameService.JoinGameAsync(request))                                                                                                                                    
+            return View("Index", request);                                                                                                                                                 
                                                                                                                                                                                      
-        return RedirectToAction("Game", new { code = dto.Code });                                                                                                                      
+        return RedirectToAction("Game", new { joinCode = request.JoinCode });                                                                                                                      
     }     
 
     
-    public IActionResult Game(string code)
+    public IActionResult Game(string joinCode)
     {
-        ViewData["Code"] = code;
+        ViewData["JoinCode"] = joinCode;
 
         return View();
     }
