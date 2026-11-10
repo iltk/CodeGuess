@@ -1,5 +1,5 @@
 using CodeGuess.Api.Data;
-using CodeGuess.Api.Hub;
+using CodeGuess.Api.Hubs;
 using CodeGuess.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -58,6 +58,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHub<GameHub>("/hubs/lobby");
+app.MapHub<GameHub>("/hubs/game");
 
 app.Run();
