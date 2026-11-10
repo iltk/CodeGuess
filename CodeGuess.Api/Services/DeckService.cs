@@ -15,9 +15,11 @@ public class DeckService : IDeckService
     }
     
     
-    public async Task<List<Deck>> GetDecksAsync()
+    public async Task<List<DeckResponse>> GetDecksAsync()
     {
-        return await _db.Decks.ToListAsync();
+        return await _db.Decks
+            .Select(d => new DeckResponse { Id = d.Id, Name = d.Name })
+            .ToListAsync();
 
     }
     

@@ -5,9 +5,8 @@ namespace CodeGuess.Api.Services;
 
 public interface IDeckService
 {
-    
-    Task<List<Deck>> GetDecksAsync();
-    
 
-    
+    Task<List<DeckResponse>> GetDecksAsync();
+
+
 }

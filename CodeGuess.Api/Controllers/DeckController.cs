@@ -1,4 +1,4 @@
-using CodeGuess.Api.Models;
+using CodeGuess.Api.DTOs;
 using CodeGuess.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,7 +16,7 @@ public class DeckController : ControllerBase
     
     
     [HttpGet]
-    public async Task<ActionResult<List<Deck>>> GetDecks()
+    public async Task<ActionResult<List<DeckResponse>>> GetDecks()
     {
         return Ok(await _deckService.GetDecksAsync());
     }
