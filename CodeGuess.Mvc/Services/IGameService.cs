@@ -4,8 +4,11 @@ namespace CodeGuess.Mvc.Services;
 
 public interface IGameService
 {
-    Task<GameSessionDto?> CreateGameAsync(int deckId);
-    
-    Task<bool> JoinGameAsync(JoinGameDto dto);                                                                                                                                         
+    Task<GameResponse?> CreateGameAsync(int deckId);
 
+    Task<bool> JoinGameAsync(JoinGameRequest request);
+
+    Task StartGameAsync(string joinCode);
+
+    Task<GameResponse?> GetGameAsync(string joinCode);
 }
