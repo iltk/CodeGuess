@@ -9,9 +9,8 @@ public class GameSession
 
     public string JoinCode { get; set; } = string.Empty;
 
-    public string State { get; set; } = "Lobby";
-
-    public int CurrentQuestionIndex { get; set; } = 0;
+    public GameState State { get; set; } = GameState.Lobby;
+    public int CurrentQuestionPosition { get; set; } = 0;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

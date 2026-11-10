@@ -66,7 +66,7 @@ namespace CodeGuess.Api.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CurrentQuestionIndex")
+                    b.Property<int>("CurrentQuestionPosition")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("DeckId")
@@ -76,9 +76,8 @@ namespace CodeGuess.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.Property<int>("State")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -125,6 +124,9 @@ namespace CodeGuess.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("DeckId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Position")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
