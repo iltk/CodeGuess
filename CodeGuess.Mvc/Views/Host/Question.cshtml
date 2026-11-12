@@ -2,14 +2,14 @@
 
 
 <main>
-    
+
     <h1>
         @(Model.Question?.Code ?? "No question found")
     </h1>
 
     @if (Model?.AnswerOptions != null)
     {
-        
+
         <ul>
             @foreach (var answer in Model.AnswerOptions)
             {
@@ -23,39 +23,63 @@
     }
 
     <p id="countdown">
-        00.30
+        00:10
     </p>
-
-
 </main>
+
 @section Scripts {
     <script>
-        
-        // Using Razor helper inside a script block in a .cshtml file
-        const targetUrl = '@Url.Action("LeaderBoard", "Host", new { joinCode = Model.JoinCode })';
+        const QUESTION_SECONDS = 10;
+        const REVEAL_DELAY_MS = 5000;
 
-       
+        const leaderboardUrl = '@Url.Action("LeaderBoard", "Host", new { joinCode = Model.JoinCode })';
+        const joinCode = '@Model.JoinCode';
+        const questionId = @(Model.Question?.Id ?? 0);
 
-        const countdown = document.getElementById("countdown");
-        let counter = 10;
-        
-        // unique ID returned by setInterval
-        const myInterval = setInterval(() => {
-            counter = counter - 1;
-            countdown.textContent = `00:${counter}`;
-            
-            //  condition to stop
-            if (counter ===  0) {
-                // Clear the interval using its ID
-                clearInterval(myInterval);
+        // TODO: for now use fetch, may switch to SignalR when player functionality is added
+        const correctAnswerIdPromise = fetch(`http://localhost:5129/api/Game/${encodeURIComponent(joinCode)}/correct-answer?questionId=${questionId}`)
+            .then(response => {
+                if (!response.ok) throw new Error(response.status); // fetch doesn't throw on 404/500
+                return response.json();
+            })
+            .catch(error => {
+                console.error("Failed to load correct answer:", error);
+                return null;
+            });
 
-                // Go to the leaderboard page (it returns HTML, so navigate instead of fetch)                                                                                      
-                window.location.href = targetUrl;
+        const countdownElement = document.getElementById("countdown");
+        let secondsLeft = QUESTION_SECONDS;
 
-                
-                //TODO: remove after testing
-                console.log("Target reached! Timer stopped."); }
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function formatTime(seconds) {
+            return `00:${String(seconds).padStart(2, "0")}`;
+        }
+
+        function revealCorrectAnswer(correctAnswerId) {
+            const correctAnswerElement = document.getElementById(`answer-${correctAnswerId}`);
+            if (correctAnswerElement) {
+                correctAnswerElement.textContent += " ✔ correct";
+            }
+        }
+
+        countdownElement.textContent = formatTime(secondsLeft);
+
+        const countdownTimerId = setInterval(async () => {
+            secondsLeft--;
+            countdownElement.textContent = formatTime(secondsLeft);
+
+            if (secondsLeft === 0) {
+                clearInterval(countdownTimerId);
+
+                revealCorrectAnswer(await correctAnswerIdPromise);
+
+                // Wait before going to the leaderboard page
+                await delay(REVEAL_DELAY_MS);
+                window.location.href = leaderboardUrl;
+            }
         }, 1000);
-
     </script>
 }
