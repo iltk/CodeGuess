@@ -53,12 +53,19 @@ public class GameController : ControllerBase
         return Ok(game);
     }
 
+    // GET api/game/ABCD/leaderboard
     [HttpGet("{joinCode}/leaderboard")]
-    public async Task<ActionResult<List<PlayerResponse>>> GetLeaderBoard(string joinCode)                                                                                              
+    public async Task<ActionResult<List<PlayerResponse>>> GetLeaderboard(string joinCode)
     {
-        var leaderBoard = await _gameService.GetLeaderBoardAsync(joinCode);
-        
-        return Ok(leaderBoard);
+        var leaderboard = await _gameService.GetLeaderboardAsync(joinCode);
+        return Ok(leaderboard);
     }
-    
+
+    // GET api/game/ABCD/correct-answer?questionId=5
+    [HttpGet("{joinCode}/correct-answer")]
+    public async Task<ActionResult<int>> GetCorrectAnswerId(string joinCode, int questionId)
+    {
+        var correctAnswerId = await _gameService.GetCorrectAnswerIdAsync(joinCode, questionId);
+        return Ok(correctAnswerId);
+    }
 }

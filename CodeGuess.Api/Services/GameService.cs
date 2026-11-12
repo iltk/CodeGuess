@@ -108,7 +108,6 @@ public class GameService: IGameService
             .FirstOrDefaultAsync(q => q.DeckId == session.DeckId
                                    && q.Position == session.CurrentQuestionPosition);
 
-        // Select straight into DTOs so IsCorrect never leaves the server
         var answers = question == null
             ? new List<AnswerOptionResponse>()
             : await _db.AnswerOptions
@@ -133,7 +132,7 @@ public class GameService: IGameService
         };
     }
 
-    public async Task<List<PlayerResponse>> GetLeaderBoardAsync(string joinCode)
+    public async Task<List<PlayerResponse>> GetLeaderboardAsync(string joinCode)
     {
         var session = await _db.GameSessions
             .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
@@ -149,11 +148,11 @@ public class GameService: IGameService
             .OrderByDescending(p => p.Score)
             .ToListAsync();
 
-        List<PlayerResponse> playerList = new List<PlayerResponse>();
+        var leaderboard = new List<PlayerResponse>();
 
         foreach (var player in players)
         {
-            playerList.Add(new PlayerResponse
+            leaderboard.Add(new PlayerResponse
             {
                 Id = player.Id,
                 Nickname = player.Nickname,
@@ -164,8 +163,25 @@ public class GameService: IGameService
 
         }
         
-        return playerList;
+        return leaderboard;
     }
+
+
+    public async Task<int> GetCorrectAnswerIdAsync(string joinCode, int questionId)
+    {
+        var session = await _db.GameSessions
+            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
+
+        //TODO: add error checks later
+
+        var correctAnswerId = await _db.AnswerOptions
+            .Where(a => a.QuestionId == questionId && a.IsCorrect)
+            .Select(a => a.Id)
+            .FirstOrDefaultAsync();
+
+        return correctAnswerId;
+    }
+    
     
 
 
@@ -173,11 +189,12 @@ public class GameService: IGameService
     //creates the short codes players type in to join a game                                                                                                                          
     private static string GenerateJoinCode()
     {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const string allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        const int joinCodeLength = 4;
 
         return new string(
-            Enumerable.Range(0, 4)
-                .Select(_ => chars[RandomNumberGenerator.GetInt32(chars.Length)])
+            Enumerable.Range(0, joinCodeLength)
+                .Select(_ => allowedChars[RandomNumberGenerator.GetInt32(allowedChars.Length)])
                 .ToArray()
         );
     }
