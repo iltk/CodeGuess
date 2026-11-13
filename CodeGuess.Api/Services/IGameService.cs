@@ -1,4 +1,5 @@
 using CodeGuess.Api.DTOs;
+using CodeGuess.Api.Models;
 
 namespace CodeGuess.Api.Services;
 
@@ -15,4 +16,6 @@ public interface IGameService
     Task<List<PlayerResponse>> GetLeaderboardAsync(string joinCode);
 
     Task<int> GetCorrectAnswerIdAsync(string joinCode, int questionId);
+
+    Task<GameState> NextQuestionAsync(string joinCode);
 }

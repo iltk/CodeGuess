@@ -43,7 +43,8 @@ public class GameService: IGameService
             DeckId = session.DeckId,
             JoinCode = session.JoinCode,
             State = session.State,
-
+            CurrentQuestionPosition = session.CurrentQuestionPosition,
+            TotalQuestions = await CountQuestionsAsync(session.DeckId)
         };
 
         return response;
@@ -122,6 +123,8 @@ public class GameService: IGameService
             DeckId = session.DeckId,
             State = session.State,
             CreatedAt = session.CreatedAt,
+            CurrentQuestionPosition = session.CurrentQuestionPosition,
+            TotalQuestions = await CountQuestionsAsync(session.DeckId),
             Question = question == null ? null : new QuestionResponse
             {
                 Id = question.Id,
@@ -181,10 +184,40 @@ public class GameService: IGameService
 
         return correctAnswerId;
     }
-    
-    
 
+    public async Task<GameState> NextQuestionAsync(string joinCode)
+    {
+        var session = await _db.GameSessions
+            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
 
+        if (session == null)
+        {
+            throw new KeyNotFoundException("Game session not found.");
+        }
+        
+        var totalQuestions = await CountQuestionsAsync(session.DeckId);
+        
+        if (totalQuestions <= session.CurrentQuestionPosition + 1)
+        {
+            // No questions left: the game is over
+            session.State = GameState.Finished;
+        }
+        else
+        {
+            session.CurrentQuestionPosition++;
+        }
+
+        await _db.SaveChangesAsync();
+
+        await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State);   // tell everyone in that room
+
+        return session.State;
+    }
+
+    private Task<int> CountQuestionsAsync(int deckId)
+    {
+        return _db.Questions.CountAsync(q => q.DeckId == deckId);
+    }
 
     //creates the short codes players type in to join a game                                                                                                                          
     private static string GenerateJoinCode()
@@ -198,6 +231,4 @@ public class GameService: IGameService
                 .ToArray()
         );
     }
-    
-    
 }

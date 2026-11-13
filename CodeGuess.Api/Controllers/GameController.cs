@@ -1,4 +1,5 @@
 using CodeGuess.Api.DTOs;
+using CodeGuess.Api.Models;
 using CodeGuess.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -67,5 +68,14 @@ public class GameController : ControllerBase
     {
         var correctAnswerId = await _gameService.GetCorrectAnswerIdAsync(joinCode, questionId);
         return Ok(correctAnswerId);
+    }
+
+    [HttpPost("{joinCode}/next")]
+    public async Task<ActionResult<GameState>> NextQuestion(string joinCode)
+    {
+        // Move the game session to the next question (or finish it)
+        var state = await _gameService.NextQuestionAsync(joinCode);
+
+        return Ok(state);
     }
 }

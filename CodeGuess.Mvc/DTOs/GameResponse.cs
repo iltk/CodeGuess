@@ -16,6 +16,12 @@ public class GameResponse
 
     public DateTime CreatedAt { get; set; }
 
+    // 0-based position of the current question in the deck
+    public int CurrentQuestionPosition { get; set; }
+
+    // How many questions the deck has
+    public int TotalQuestions { get; set; }
+
     public QuestionResponse? Question { get; set; }
 
     public List<AnswerOptionResponse>? AnswerOptions { get; set; }
