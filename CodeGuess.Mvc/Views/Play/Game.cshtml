@@ -5,14 +5,18 @@
     </div>
 
     <div id="question-section" class="tab-content d-none">
+        
         <h2>Question section</h2>
+        <ul id="options">
+
+        </ul>
     </div>
 
     <div id="correctQuestion-section" class="tab-content d-none">
         <h2>Correct question is</h2>
     </div>
 
-    <div id="result-section" class="tab-content d-none">
+    <div id="finished-section" class="tab-content d-none">
         <h2>Result section</h2>
     </div>
 
@@ -21,5 +25,59 @@
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
-    <script src="~/js/play.js" asp-append-version="true"></script>
+    <script>
+        const joinCode = "@ViewData["JoinCode"]";
+        // Must match the GameState enum in the API
+        const GameState = { Lobby: 0, Question: 1, Results: 2, Leaderboard: 3, Finished: 4 };
+        const optionsList = document.getElementById("options");
+        let currentGameState = "Lobby";
+
+        const sections = {
+            [GameState.Lobby]: "lobby-section",
+            [GameState.Question]: "question-section",
+            [GameState.Finished]: "finished-section"
+        };
+
+        
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("http://localhost:5129/hubs/game")
+            .build();
+
+        // Server sends this when the host moves the game to a new state
+        connection.on("StateChanged", state => showSection(state));
+        
+        // Server only sends this while the game is not finished
+        connection.on("NewQuestion", (options)=>{
+            optionsList.innerHTML = ""; // clear the previous question's options
+
+            options.forEach((option) => {
+                const li = document.createElement("li");
+                li.textContent = option.text; // Autocomplete now knows .text and .id exist
+                optionsList.appendChild(li);
+            });
+            
+            
+            
+        })
+        
+
+        // Connect, then join this room's group
+        connection.start()
+            .then(() => connection.invoke("JoinGame", joinCode))
+            .catch(err => console.error(err));
+
+        function showSection(state) {
+            currentGameState = state;
+            document.querySelectorAll(".tab-content").forEach(section => {
+                section.classList.remove("d-block");
+                section.classList.add("d-none");
+            });
+
+            const target = document.getElementById(sections[state]);
+            if (target) {
+                target.classList.remove("d-none");
+                target.classList.add("d-block");
+            }
+        }
+    </script>
 }
