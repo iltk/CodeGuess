@@ -61,6 +61,8 @@ public class GameService: IGameService
         {
             throw new KeyNotFoundException("Game session not found.");
         }
+        
+        
 
         var newPlayer = new Player
         {
@@ -72,6 +74,8 @@ public class GameService: IGameService
 
         _db.Players.Add(newPlayer);
         await _db.SaveChangesAsync();
+        
+       
         
         //Broadcasts an update to everyone subscribed
         await _hub.Clients.Group(joinCode).SendAsync("PlayerJoined", request.Nickname);   // tell everyone in that room
@@ -90,7 +94,12 @@ public class GameService: IGameService
         session.State = GameState.Question;
         await _db.SaveChangesAsync();
         
-        await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State);   // tell everyone in that room
+        await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State); // tell everyone in that room
+
+        //todo: get list of answer n clean up
+        List<AnswerOptionResponse> answers = await GetAnswerOptionsAsync(session.DeckId, session.CurrentQuestionPosition);
+        await _hub.Clients.Group(joinCode).SendAsync("NewQuestion", answers);
+        
 
         
     }
@@ -199,7 +208,7 @@ public class GameService: IGameService
         
         if (totalQuestions <= session.CurrentQuestionPosition + 1)
         {
-            // No questions left: the game is over
+            // No questions left, the game is over
             session.State = GameState.Finished;
         }
         else
@@ -208,10 +217,36 @@ public class GameService: IGameService
         }
 
         await _db.SaveChangesAsync();
-
+        
         await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State);   // tell everyone in that room
 
+        if (session.State != GameState.Finished)
+        {
+            
+            List<AnswerOptionResponse> answers = await GetAnswerOptionsAsync(session.DeckId, session.CurrentQuestionPosition);
+            await _hub.Clients.Group(joinCode).SendAsync("NewQuestion", answers);
+        }
+
         return session.State;
+    }
+
+    
+    
+    private async Task<List<AnswerOptionResponse>> GetAnswerOptionsAsync(int deckId, int questionPosition)
+    {
+        
+        var question = await _db.Questions
+            .FirstOrDefaultAsync(q => q.DeckId == deckId
+                                      && q.Position == questionPosition);
+
+        var answers = question == null
+            ? new List<AnswerOptionResponse>()
+            : await _db.AnswerOptions
+                .Where(a => a.QuestionId == question.Id)
+                .Select(a => new AnswerOptionResponse { Id = a.Id, Text = a.Text })
+                .ToListAsync();
+        return answers;
+        
     }
 
     private Task<int> CountQuestionsAsync(int deckId)
