@@ -1,4 +1,5 @@
 using CodeGuess.Mvc.DTOs;
+using CodeGuess.Mvc.Models;
 
 namespace CodeGuess.Mvc.Services;
 
@@ -32,10 +33,10 @@ public class GameService : IGameService
         return response.IsSuccessStatusCode;
     }
 
-    public async Task StartGameAsync(string joinCode)
+    public async Task<bool> StartGameAsync(string joinCode)
     {
-        //TODO: add error handling
-        await _http.PostAsync($"api/game/{joinCode}/start", null);
+        var response = await _http.PostAsync($"api/game/{joinCode}/start", null);
+        return response.IsSuccessStatusCode;
     }
 
     public async Task<GameResponse?> GetGameAsync(string joinCode)
@@ -53,7 +54,7 @@ public class GameService : IGameService
     // need player and its place like 1 , 2 ,3 ...
     //LeaderBoardResponse - list of playersDto 
     //where player dto will have name score and places soprted 
-    public async Task<List<PlayerResponse>?> GetLeaderBoardAsync(string joinCode)
+    public async Task<List<PlayerResponse>?> GetLeaderboardAsync(string joinCode)
     {
         var response = await _http.GetAsync($"api/game/{joinCode}/leaderboard");
 
@@ -61,5 +62,15 @@ public class GameService : IGameService
             return null;
 
         return await response.Content.ReadFromJsonAsync<List<PlayerResponse>>();
+    }
+
+    public async Task<GameState?> NextQuestionAsync(string joinCode)
+    {
+        var response = await _http.PostAsync($"api/game/{joinCode}/next", null);
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        return await response.Content.ReadFromJsonAsync<GameState>();
     }
 }

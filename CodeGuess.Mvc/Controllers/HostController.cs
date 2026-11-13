@@ -49,7 +49,8 @@ public class HostController : Controller
     [HttpPost]
     public async Task<IActionResult> Start(string joinCode)
     {
-        await _gameService.StartGameAsync(joinCode);
+        if (!await _gameService.StartGameAsync(joinCode))
+            return RedirectToAction("Lobby", new { joinCode });
 
         return RedirectToAction("Question", new { joinCode });
     }
@@ -65,13 +66,29 @@ public class HostController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> LeaderBoard(string joinCode)                                                                                                                      
-    {                                                                                                                                                                                  
-        var result = await _gameService.GetLeaderBoardAsync(joinCode);                                                                                                                 
-        if (result == null)                                                                                                                                                            
-            return RedirectToAction("Index");                                                                                                                                          
-                                                                                                                                                                                     
-        ViewData["JoinCode"] = joinCode;                                                                                                                                               
-        return View(result);                                                                                                                                                           
-    }  
+    public async Task<IActionResult> LeaderBoard(string joinCode, GameState state)
+    {
+        var players = await _gameService.GetLeaderboardAsync(joinCode);
+        if (players == null)
+            return RedirectToAction("Index");
+
+        ViewData["JoinCode"] = joinCode;
+        ViewData["GameState"] = state;
+        return View(players);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Next(string joinCode)
+    {
+        var state = await _gameService.NextQuestionAsync(joinCode);
+
+        // API call failed: stay on the leaderboard
+        if (state == null)
+            return RedirectToAction("LeaderBoard", new { joinCode });
+
+        if (state == GameState.Finished)
+            return RedirectToAction("LeaderBoard", new { joinCode, state });
+
+        return RedirectToAction("Question", new { joinCode });
+    }
 }

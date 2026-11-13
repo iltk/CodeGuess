@@ -1,4 +1,5 @@
 using CodeGuess.Mvc.DTOs;
+using CodeGuess.Mvc.Models;
 
 namespace CodeGuess.Mvc.Services;
 
@@ -8,9 +9,11 @@ public interface IGameService
 
     Task<bool> JoinGameAsync(JoinGameRequest request);
 
-    Task StartGameAsync(string joinCode);
+    Task<bool> StartGameAsync(string joinCode);
 
     Task<GameResponse?> GetGameAsync(string joinCode);
 
-    Task<List<PlayerResponse>?> GetLeaderBoardAsync(string joinCode);
+    Task<List<PlayerResponse>?> GetLeaderboardAsync(string joinCode);
+
+    Task<GameState?> NextQuestionAsync(string joinCode);
 }

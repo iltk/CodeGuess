@@ -1,16 +1,31 @@
+@using CodeGuess.Mvc.Models
 @model List<CodeGuess.Mvc.DTOs.PlayerResponse>
 
-<main>                                                                                                                                                                             
-      <ul>                                                                                                                                                                           
-          @foreach (var player in Model)                                                                                                                                             
-          {                                                                                                                                                                          
-              <li>@player.Nickname: @player.Score</li>                                                                                                                               
-          }                                                                                                                                                                          
-      </ul>                                                                                                                                                                          
-                      
-      //TODO: implement next method
-      <form asp-controller="Host" asp-action="Next" method="post">                                                                                                                   
-          <input type="hidden" name="joinCode" value="@ViewData["JoinCode"]" />                                                                                                      
-          <button type="submit">Next</button>                                                                                                                                        
-      </form>                                                                                                                                                                        
-  </main> 
+@{
+    var isFinished = ViewData["GameState"] is GameState.Finished;
+}
+
+<main>
+    <h1>@(isFinished ? "Result" : "LeaderBoard")</h1>
+
+    <ul>
+        @foreach (var player in Model)
+        {
+            <li>@player.Nickname: @player.Score</li>
+        }
+    </ul>
+
+    @if (isFinished)
+    {
+        <a asp-controller="Host" asp-action="Index">
+            <button type="button">Back Home</button>
+        </a>
+    }
+    else
+    {
+        <form asp-controller="Host" asp-action="Next" method="post">
+            <input type="hidden" name="joinCode" value="@ViewData["JoinCode"]" />
+            <button type="submit">Next</button>
+        </form>
+    }
+</main>
