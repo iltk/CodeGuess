@@ -1,4 +1,4 @@
-namespace CodeGuess.Mvc.Models;
+namespace CodeGuess.Mvc.ViewModels;
 
 public class ErrorViewModel
 {
