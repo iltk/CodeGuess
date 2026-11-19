@@ -274,6 +274,35 @@ public class GameService: IGameService
         session.QuestionStartedAt = DateTime.UtcNow;                                                                                                                                   
         await _db.SaveChangesAsync();                                                                                                                                                  
     }
+    
+    
+    public async Task<int> GetPlayerPlace(string joinCode, int playerId)
+    {
+        
+        var session = await GetSessionAsync(joinCode);
+        
+        var players = await _db.Players
+            .Where(p => p.GameSessionId == session.Id)
+            .OrderByDescending(p => p.Score)
+            .ToListAsync();
+
+        int playerPosition = 1;
+        
+        foreach (Player player in players)
+        {
+            if (player.Id == playerId)
+            {
+                return playerPosition;
+            }
+            playerPosition++;
+
+        }
+
+        return 0;
+        
+    }
+
+   
 
     private async Task<GameSession> GetSessionAsync(string joinCode)
     {
@@ -316,6 +345,8 @@ public class GameService: IGameService
         return answers;
 
     }
+
+    
 
     private Task<int> CountQuestionsAsync(int deckId)
     {

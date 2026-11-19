@@ -26,5 +26,7 @@ public interface IGameService
     Task MarkQuestionStartedAsync(string joinCode);
     
     Task<List<AnswerOptionResponse>> GetAnswerOptionsAsync(string joinCode);
+    
+    Task<int> GetPlayerPlace(string joinCode, int playerId);
 
 }

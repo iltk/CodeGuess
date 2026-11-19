@@ -154,6 +154,31 @@ public class GameController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+    
+    
+    [HttpGet("{joinCode}/players/{playerId}/place")]
+    public async Task<ActionResult<int>> GetPlayerPlace(string joinCode, int playerId) 
+    {
+
+        try
+        {
+            var playerPlace = await _gameService.GetPlayerPlace(joinCode, playerId);
+            return Ok(playerPlace);
+
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        
+        
+        
+    }
+
 
 
 }
