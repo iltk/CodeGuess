@@ -63,9 +63,6 @@ namespace CodeGuess.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("CurrentQuestionPosition")
                         .HasColumnType("INTEGER");
 
@@ -75,6 +72,9 @@ namespace CodeGuess.Api.Migrations
                     b.Property<string>("JoinCode")
                         .IsRequired()
                         .HasMaxLength(4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("QuestionStartedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("State")
@@ -99,13 +99,16 @@ namespace CodeGuess.Api.Migrations
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("LastAnsweredPosition")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Nickname")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Score")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("Score")
+                        .HasColumnType("REAL");
 
                     b.HasKey("Id");
 

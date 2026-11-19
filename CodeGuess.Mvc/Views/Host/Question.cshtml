@@ -57,7 +57,7 @@
             }, 1000);
         });
 
-        // time is up, reveal the answer, then move on after 5 s to leaderboard
+        // time is up, reveal the answer, then move on after 8 s to leaderboard
         connection.on("TimerStopped", async () => {
             await showCorrectAnswer();
             setTimeout(goToNextScreen, 8000);

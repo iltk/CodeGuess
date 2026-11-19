@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
 
 namespace CodeGuess.Api.Models;
 
@@ -15,7 +14,7 @@ public class GameSession
     public GameState State { get; set; } = GameState.Lobby;
     public int CurrentQuestionPosition { get; set; } = 0;
 
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? QuestionStartedAt { get; set; }
 
     public Deck Deck { get; set; } = null!;
 

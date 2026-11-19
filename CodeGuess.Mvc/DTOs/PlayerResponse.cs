@@ -8,6 +8,6 @@ public class PlayerResponse
 
     public int GameSessionId { get; set; }
     
-    public int? Score { get; set; } = 0;
+    public double? Score { get; set; } = 0;
     
 }
