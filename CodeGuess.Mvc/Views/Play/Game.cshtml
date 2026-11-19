@@ -1,23 +1,52 @@
-<div id="game" data-join-code="@ViewData["JoinCode"]">
+@model PlayGameViewModel
+
+<div id="game" data-join-code="@Model.JoinCode">
 
     <div id="lobby-section" class="tab-content d-block">
         <h2>Lobby section</h2>
+        <p>Waiting for host to start the game</p>
     </div>
 
     <div id="question-section" class="tab-content d-none">
         
         <h2>Question section</h2>
-        <ul id="options">
-
-        </ul>
+        
+        <div id="answer-form">
+            <div id="option-list">
+                
+            </div>
+            <button type="button" id="submit-answer">Submit</button>
+        </div> 
+        
+        
     </div>
 
-    <div id="correctQuestion-section" class="tab-content d-none">
-        <h2>Correct question is</h2>
+    <div id="correct-answer-section" class="tab-content d-none">
+        
+        <div id="answered-view" class="d-none">
+            <p id="waiting-message" class="d-block">
+                Waiting for others to submit
+            </p>
+            
+            <p id="player-answer">
+
+            </p>
+
+            <p id="answer-result"></p>
+
+        </div>
+        
+        <div id="time-up-view" class="d-none">
+            <p>
+                Too slow. Time ran out
+            </p>
+
+        </div>
+
     </div>
 
     <div id="finished-section" class="tab-content d-none">
-        <h2>Result section</h2>
+        <h2>IN PROGRESS</h2>
     </div>
 
 
@@ -26,58 +55,180 @@
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
-        const joinCode = "@ViewData["JoinCode"]";
-        // Must match the GameState enum in the API
-        const GameState = { Lobby: 0, Question: 1, Results: 2, Leaderboard: 3, Finished: 4 };
-        const optionsList = document.getElementById("options");
-        let currentGameState = "Lobby";
+        const joinCode = "@Model.JoinCode";
+        const playerId = "@Model.PlayerId";
+        let answerId;
+        //  matches the GameState enum in the API
+        const GameState = { Lobby: 0, Question: 1, CorrectAnswer: 2, Leaderboard: 3, Finished: 4 };
+        const optionList = document.getElementById("option-list");
+        
+        let answerOptions;
+        let currentGameState = GameState.Lobby;
+        let playerAnswer;
+        let hasSubmitted = false;
+        
 
-        const sections = {
+        const sectionIds = {
             [GameState.Lobby]: "lobby-section",
             [GameState.Question]: "question-section",
-            [GameState.Finished]: "finished-section"
+            [GameState.Finished]: "finished-section",
+            [GameState.CorrectAnswer]: "correct-answer-section",
         };
-
         
+        
+        const answeredView = document.getElementById("answered-view");
+        const timeUpView = document.getElementById("time-up-view");
+        const waitingMessage = document.getElementById("waiting-message");
+        const playerAnswerElement = document.getElementById("player-answer");
+        const answerResultElement = document.getElementById("answer-result");
+
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5129/hubs/game")
             .build();
 
+
+
         // Server sends this when the host moves the game to a new state
         connection.on("StateChanged", state => showSection(state));
-        
+
         // Server only sends this while the game is not finished
-        connection.on("NewQuestion", (options)=>{
-            optionsList.innerHTML = ""; // clear the previous question's options
+        connection.on("NewQuestion", options => {
+            resetAnswerView();      // clear the previous question's result
+            renderOptions(options);
+        });
 
-            options.forEach((option) => {
-                const li = document.createElement("li");
-                li.textContent = option.text; // Autocomplete now knows .text and .id exist
-                optionsList.appendChild(li);
-            });
-            
-            
-            
-        })
+        // time is up,  show if the player was correct, or that they ran out of time
+        connection.on("TimerStopped", async () => {
+            showSection(GameState.CorrectAnswer);
+
+            if (!hasSubmitted) {
+                show(timeUpView);
+                return;
+            }
+
+            const isCorrect = await sendAnswer();
+            if (isCorrect !== null) {
+                showAnswerResult(isCorrect);
+            }
+        });
+
+
+
+        document.getElementById("submit-answer").addEventListener("click", () => {
+            //find the selected radio btn in the AnswerId group
+            const selectedRadio = document.querySelector('input[name="AnswerId"]:checked');
+
+            answerId = selectedRadio.value;
+            playerAnswer = findOptionText(Number(answerId));
+            hasSubmitted = true;
+
+            showSection(GameState.CorrectAnswer);
+            showSubmittedAnswer();
+        });
+
+
+
+        //hellpers 
         
+        // Make one radio button per answer option
+        function renderOptions(options) {
+            answerOptions = options;
+            optionList.innerHTML = ""; // clear the previous question's options
 
-        // Connect, then join this room's group
-        connection.start()
-            .then(() => connection.invoke("JoinGame", joinCode))
-            .catch(err => console.error(err));
+            options.forEach(option => {
+                const label = document.createElement("label");
+                label.innerHTML = `<input type="radio" name="AnswerId" value="${option.id}" required> `;
+                label.append(option.text);
+                optionList.appendChild(label);
+                optionList.appendChild(document.createElement("br"));
+            });
+        }
 
+        // Text of the answer option with this id
+        function findOptionText(id) {
+            const option = answerOptions.find(option => option.id === id);
+            return option?.text || null;
+        }
+
+        // Show the player's answer with "Waiting for others to submit"
+        function showSubmittedAnswer() {
+            playerAnswerElement.textContent = `${playerAnswer}`;
+            show(answeredView);
+        }
+
+        // Send the answer to the API returns true/false, or null if the call failed
+        async function sendAnswer() {
+            const payload = { playerId, answerId };
+
+            const res = await fetch(`http://localhost:5129/api/Game/${joinCode}/answer`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },  // tells the server "body is JSON"
+                body: JSON.stringify(payload)                       // object → JSON string
+            });
+
+            if (!res.ok) {
+                const err = await res.json().catch(() => null);   // body may not be JSON
+                console.error(res.status, err);
+                return null;
+            }
+
+            return await res.json();
+        }
+
+        // Show green "Correct" or red "Incorrect" under the player's answer
+        function showAnswerResult(isCorrect) {
+            show(answeredView);
+            hide(waitingMessage); // result arrived, stop waiting
+
+            const colorClass = isCorrect ? "text-success" : "text-danger";   // green or red
+
+            playerAnswerElement.classList.add(colorClass);
+            answerResultElement.classList.add(colorClass);
+            answerResultElement.textContent = isCorrect ? "Correct" : "Incorrect";
+        }
+
+        // Put the answer views back to their starting state before the next question
+        function resetAnswerView() {
+            hide(answeredView);
+            hide(timeUpView);
+            show(waitingMessage);
+
+            playerAnswerElement.textContent = "";
+            playerAnswerElement.classList.remove("text-success", "text-danger");
+
+            answerResultElement.textContent = "";
+            answerResultElement.classList.remove("text-success", "text-danger");
+        }
+
+        // show the section for according to game state
         function showSection(state) {
             currentGameState = state;
-            document.querySelectorAll(".tab-content").forEach(section => {
-                section.classList.remove("d-block");
-                section.classList.add("d-none");
-            });
+            document.querySelectorAll(".tab-content").forEach(section => hide(section));
 
-            const target = document.getElementById(sections[state]);
-            if (target) {
-                target.classList.remove("d-none");
-                target.classList.add("d-block");
+            const targetSection = document.getElementById(sectionIds[state]);
+            if (targetSection) {
+                show(targetSection);
             }
         }
+
+        function show(element) {
+            element.classList.remove("d-none");
+            element.classList.add("d-block");
+        }
+
+        function hide(element) {
+            element.classList.remove("d-block");
+            element.classList.add("d-none");
+        }
+        
+        // Connect, then join this room's group
+        connection.start()
+            .then(async () => {
+                //todo: handle response errors
+                await connection.invoke("JoinGame", joinCode);
+            })
+            .catch(err => console.error(err));
+
+        
     </script>
 }
