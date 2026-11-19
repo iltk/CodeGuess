@@ -3,8 +3,7 @@ using CodeGuess.Mvc.Models;
 
 namespace CodeGuess.Mvc.Services;
 
-
-// Talks to the API's game endpoints
+// Every method returns null (or false) when the API says no or can't be reached
 public class GameService : IGameService
 {
     private readonly HttpClient _http;
@@ -16,61 +15,109 @@ public class GameService : IGameService
 
     public async Task<GameResponse?> CreateGameAsync(int deckId)
     {
-        var response = await _http.PostAsJsonAsync("api/game", new { deckId });
+        try
+        {
+            var response = await _http.PostAsJsonAsync("api/game", new { deckId });
 
-        if (!response.IsSuccessStatusCode)
-            return null;
+            if (!response.IsSuccessStatusCode)
+                return null;
 
-        return await response.Content.ReadFromJsonAsync<GameResponse>();
+            return await response.Content.ReadFromJsonAsync<GameResponse>();
+        }
+        catch (HttpRequestException)
+        {
+            return null; // API is down
+        }
     }
 
-    public async Task<bool> JoinGameAsync(JoinGameRequest request)
+    public async Task<int?> JoinGameAsync(JoinGameRequest request)
     {
-        var response = await _http.PostAsJsonAsync(
-            $"api/game/{request.JoinCode}/join",
-            new { request.Nickname });
+        try
+        {
+            var response = await _http.PostAsJsonAsync(
+                $"api/game/{request.JoinCode}/join",
+                new { request.Nickname });
 
-        return response.IsSuccessStatusCode;
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            // API returns the new player's id
+            return await response.Content.ReadFromJsonAsync<int>();
+        }
+        catch (HttpRequestException)
+        {
+            return null; // API is down
+        }
     }
 
     public async Task<bool> StartGameAsync(string joinCode)
     {
-        var response = await _http.PostAsync($"api/game/{joinCode}/start", null);
-        return response.IsSuccessStatusCode;
+        try
+        {
+            var response = await _http.PostAsync($"api/game/{joinCode}/start", null);
+            return response.IsSuccessStatusCode;
+        }
+        catch (HttpRequestException)
+        {
+            return false; // API is down
+        }
     }
 
     public async Task<GameResponse?> GetGameAsync(string joinCode)
     {
-        var response = await _http.GetAsync($"api/game/{joinCode}");
+        try
+        {
+            var response = await _http.GetAsync($"api/game/{joinCode}");
 
-        if (!response.IsSuccessStatusCode)
-            return null;
+            if (!response.IsSuccessStatusCode)
+                return null;
 
-        return await response.Content.ReadFromJsonAsync<GameResponse>();
+            return await response.Content.ReadFromJsonAsync<GameResponse>();
+        }
+        catch (HttpRequestException)
+        {
+            return null; // API is down
+        }
     }
-    
-    
-    //call api to get the results 
+
+
+    //call api to get the results
     // need player and its place like 1 , 2 ,3 ...
-    //LeaderBoardResponse - list of playersDto 
-    //where player dto will have name score and places soprted 
+    //LeaderBoardResponse - list of playersDto
+    //where player dto will have name score and places soprted
     public async Task<List<PlayerResponse>?> GetLeaderboardAsync(string joinCode)
     {
-        var response = await _http.GetAsync($"api/game/{joinCode}/leaderboard");
+        try
+        {
+            var response = await _http.GetAsync($"api/game/{joinCode}/leaderboard");
 
-        if (!response.IsSuccessStatusCode)
-            return null;
+            if (!response.IsSuccessStatusCode)
+                return null;
 
-        return await response.Content.ReadFromJsonAsync<List<PlayerResponse>>();
+            return await response.Content.ReadFromJsonAsync<List<PlayerResponse>>();
+        }
+        catch (HttpRequestException)
+        {
+            return null; // API is down
+        }
     }
 
-    public async Task<GameState?> NextQuestionAsync(string joinCode)
+    public async Task<GameState?> AdvanceGameAsync(string joinCode)
     {
-        var response = await _http.PostAsync($"api/game/{joinCode}/next", null);
+        try
+        {
+            var response = await _http.PostAsync($"api/game/{joinCode}/advance", null);
 
-        if (!response.IsSuccessStatusCode)
-            return null;
+            if (!response.IsSuccessStatusCode)
+                return null;
 
-        return await response.Content.ReadFromJsonAsync<GameState>();
+            return await response.Content.ReadFromJsonAsync<GameState>();
+        }
+        catch (HttpRequestException)
+        {
+            return null; // API is down
+        }
     }
+
+
 }

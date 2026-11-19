@@ -14,6 +14,13 @@ public class DeckService : IDeckService
 
     public async Task<List<DeckResponse>> GetDecksAsync()
     {
-        return await _http.GetFromJsonAsync<List<DeckResponse>>("api/deck") ?? new();
+        try
+        {
+            return await _http.GetFromJsonAsync<List<DeckResponse>>("api/deck") ?? new();
+        }
+        catch (HttpRequestException)
+        {
+            return new(); // API is down or returned an error: show no decks
+        }
     }
 }

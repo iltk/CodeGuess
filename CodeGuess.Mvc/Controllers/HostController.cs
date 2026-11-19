@@ -1,5 +1,6 @@
 using CodeGuess.Mvc.Models;
 using CodeGuess.Mvc.Services;
+using CodeGuess.Mvc.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CodeGuess.Mvc.Controllers;
@@ -28,13 +29,19 @@ public class HostController : Controller
     public async Task<IActionResult> Create(int deckId)
     {
         if (deckId <= 0)
+        {
+            TempData["Error"] = "Please pick a deck.";
             return RedirectToAction("Index");
+        }
 
         var game = await _gameService.CreateGameAsync(deckId);
 
         // if API failed
         if (game == null)
+        {
+            TempData["Error"] = "Could not create the game. Try again.";
             return RedirectToAction("Index");
+        }
 
         return RedirectToAction("Lobby", new { joinCode = game.JoinCode });
     }
@@ -50,7 +57,10 @@ public class HostController : Controller
     public async Task<IActionResult> Start(string joinCode)
     {
         if (!await _gameService.StartGameAsync(joinCode))
+        {
+            TempData["Error"] = "Could not start the game. Try again.";
             return RedirectToAction("Lobby", new { joinCode });
+        }
 
         return RedirectToAction("Question", new { joinCode });
     }
@@ -60,7 +70,10 @@ public class HostController : Controller
     {
         var game = await _gameService.GetGameAsync(joinCode);
         if (game == null)
+        {
+            TempData["Error"] = "Could not load the question.";
             return RedirectToAction("Index");
+        }
 
         return View(game);
     }
@@ -70,7 +83,10 @@ public class HostController : Controller
     {
         var players = await _gameService.GetLeaderboardAsync(joinCode);
         if (players == null)
+        {
+            TempData["Error"] = "Could not load the leaderboard.";
             return RedirectToAction("Index");
+        }
 
         ViewData["JoinCode"] = joinCode;
         ViewData["GameState"] = state;
@@ -78,13 +94,16 @@ public class HostController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Next(string joinCode)
+    public async Task<IActionResult> Advance(string joinCode)
     {
-        var state = await _gameService.NextQuestionAsync(joinCode);
+        var state = await _gameService.AdvanceGameAsync(joinCode);
 
         // API call failed: stay on the leaderboard
         if (state == null)
+        {
+            TempData["Error"] = "Could not go to the next question. Try again.";
             return RedirectToAction("LeaderBoard", new { joinCode });
+        }
 
         if (state == GameState.Finished)
             return RedirectToAction("LeaderBoard", new { joinCode, state });

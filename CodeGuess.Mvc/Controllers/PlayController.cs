@@ -1,5 +1,6 @@
 using CodeGuess.Mvc.DTOs;
 using CodeGuess.Mvc.Services;
+using CodeGuess.Mvc.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CodeGuess.Mvc.Controllers;
@@ -23,18 +24,36 @@ public class PlayController : Controller
     [HttpPost]
     public async Task<IActionResult> Join(JoinGameRequest request)                                                                                                                             
     {                  
-        // TODO: return a better msg screen
-        if (!await _gameService.JoinGameAsync(request))                                                                                                                                    
-            return View("Index", request);                                                                                                                                                 
-                                                                                                                                                                                     
-        return RedirectToAction("Game", new { joinCode = request.JoinCode });                                                                                                                      
-    }     
+        var playerId = await _gameService.JoinGameAsync(request);
 
-    
-    public IActionResult Game(string joinCode)
-    {
-        ViewData["JoinCode"] = joinCode;
+        if (playerId == null)
+        {
+            TempData["Error"] = "Could not join. Check the game code, or try another nickname.";
+            return View("Index", request);
+        }
 
-        return View();
+        return RedirectToAction("Game", new { joinCode = request.JoinCode, playerId });
     }
+
+    [HttpGet]
+    public IActionResult Game(string joinCode, int playerId)
+    {
+        var model = new PlayGameViewModel
+        {
+            JoinCode = joinCode,
+            PlayerId = playerId
+        };
+
+        return View(model);
+    }
+    
+    //players joins lobby - state lobby
+    // then host starts game - state - question
+    // players see the answer option
+    //player clicks on answer, and the whole screen becomes this btn
+    //times run out host shows correct and switches to leaderboard
+        //player screen also updated green/red depdning on correct
+    // host clicks next and repeat 
+    
+    
 }
