@@ -36,9 +36,10 @@
 
         </div>
         
-        <div id="time-up-view" class="d-none">
+        <div id="time-up-view" class="d-block">
             <p>
                 Too slow. Time ran out
+                Wait for the next quastion
             </p>
 
         </div>
@@ -107,9 +108,11 @@
             }
 
             const isCorrect = await sendAnswer();
-            if (isCorrect !== null) {
-                showAnswerResult(isCorrect);
+            if (isCorrect === null) {
+                show(timeUpView);   // request failed: don't leave a blank screen
+                return;
             }
+            showAnswerResult(isCorrect);
         });
 
 
@@ -189,6 +192,9 @@
 
         // Put the answer views back to their starting state before the next question
         function resetAnswerView() {
+            hasSubmitted = false;   // new question: player hasn't answered yet
+            answerId = null;
+
             hide(answeredView);
             hide(timeUpView);
             show(waitingMessage);

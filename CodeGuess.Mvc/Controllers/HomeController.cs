@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using CodeGuess.Mvc.Models;
+using CodeGuess.Mvc.ViewModels;
 
 namespace CodeGuess.Mvc.Controllers;
 

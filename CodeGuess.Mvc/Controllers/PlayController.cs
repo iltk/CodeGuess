@@ -22,17 +22,23 @@ public class PlayController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Join(JoinGameRequest request)                                                                                                                             
-    {                  
+    public async Task<IActionResult> Join(JoinGameViewModel model)
+    {
+        var request = new JoinGameRequest
+        {
+            JoinCode = model.JoinCode,
+            Nickname = model.Nickname
+        };
+
         var playerId = await _gameService.JoinGameAsync(request);
 
         if (playerId == null)
         {
             TempData["Error"] = "Could not join. Check the game code, or try another nickname.";
-            return View("Index", request);
+            return View("Index", model);
         }
 
-        return RedirectToAction("Game", new { joinCode = request.JoinCode, playerId });
+        return RedirectToAction("Game", new { joinCode = model.JoinCode, playerId });
     }
 
     [HttpGet]

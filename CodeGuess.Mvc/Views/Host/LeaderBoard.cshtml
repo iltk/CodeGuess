@@ -1,21 +1,16 @@
-@using CodeGuess.Mvc.Models
-@model List<CodeGuess.Mvc.DTOs.PlayerResponse>
-
-@{
-    var isFinished = ViewData["GameState"] is GameState.Finished;
-}
+@model LeaderBoardViewModel
 
 <main>
-    <h1>@(isFinished ? "Result" : "LeaderBoard")</h1>
+    <h1>@(Model.IsFinished ? "Result" : "LeaderBoard")</h1>
 
     <ul>
-        @foreach (var player in Model)
+        @foreach (var player in Model.Players)
         {
             <li>@player.Nickname: @player.Score</li>
         }
     </ul>
 
-    @if (isFinished)
+    @if (Model.IsFinished)
     {
         <a asp-controller="Host" asp-action="Index">
             <button type="button">Back Home</button>
@@ -23,8 +18,8 @@
     }
     else
     {
-        <form asp-controller="Host" asp-action="Next" method="post">
-            <input type="hidden" name="joinCode" value="@ViewData["JoinCode"]" />
+        <form asp-controller="Host" asp-action="Advance" method="post">
+            <input type="hidden" name="joinCode" value="@Model.JoinCode" />
             <button type="submit">Next</button>
         </form>
     }

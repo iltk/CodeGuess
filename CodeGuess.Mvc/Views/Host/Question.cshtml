@@ -1,12 +1,12 @@
-@model CodeGuess.Mvc.DTOs.GameResponse
+@model HostQuestionViewModel
 
 <main>
 
     <p>Question @(Model.CurrentQuestionPosition + 1) / @Model.TotalQuestions</p>
 
-    <h1>@(Model.Question?.Code ?? "No question found")</h1>
+    <h1>@(Model.Code ?? "No question found")</h1>
 
-    @if (Model.AnswerOptions != null)
+    @if (Model.AnswerOptions.Count > 0)
     {
         <ul>
             @foreach (var answer in Model.AnswerOptions)
