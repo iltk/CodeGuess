@@ -125,8 +125,13 @@
             }
             
             const isCorrect = await answerRequest;
+            //it works prints the right thing now just dipslay it nicely
+            const response = await fetch(`http://localhost:5129/api/Game/${joinCode}/players/${playerId}/place`);
+            const place = await response.json();
+            console.log(place);
 
             if (isCorrect === null) {
+                
                 show(timeUpView);  
                 return;
             }
@@ -152,6 +157,10 @@
 
 
         //hellpers 
+        
+        //get player leaderboard score
+        //todo
+       
         
         // Make one radio button per answer option
         function renderOptions(options) {
