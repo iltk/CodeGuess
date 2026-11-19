@@ -1,17 +1,13 @@
 @model CodeGuess.Mvc.DTOs.GameResponse
 
-
 <main>
 
     <p>Question @(Model.CurrentQuestionPosition + 1) / @Model.TotalQuestions</p>
 
-    <h1>
-        @(Model.Question?.Code ?? "No question found")
-    </h1>
+    <h1>@(Model.Question?.Code ?? "No question found")</h1>
 
-    @if (Model?.AnswerOptions != null)
+    @if (Model.AnswerOptions != null)
     {
-
         <ul>
             @foreach (var answer in Model.AnswerOptions)
             {
@@ -23,79 +19,80 @@
     {
         <p>No questions found.</p>
     }
-    <form id="next-form" asp-controller="Host" asp-action="Next" method="post">                                                                                                      
-        <input type="hidden" name="joinCode" value="@Model.JoinCode" />                                                                                                                
-    </form>     
 
-    <p id="countdown">
-        00:10
-    </p>
+    <p id="countdown">00:10</p>
+
+    <form id="advance-form" asp-controller="Host" asp-action="Advance" method="post">
+        <input type="hidden" name="joinCode" value="@Model.JoinCode" />
+    </form>
+
 </main>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
-        const QUESTION_SECONDS = 10;
-        const REVEAL_DELAY_MS = 5000;
 
-        
-        const leaderboardUrl = '@Html.Raw(Url.Action("LeaderBoard", "Host", new { joinCode = Model.JoinCode }))';
         const joinCode = '@Model.JoinCode';
-        const questionId = @(Model.Question?.Id ?? 0);
+        const leaderboardUrl = '@Html.Raw(Url.Action("LeaderBoard", "Host", new { joinCode = Model.JoinCode }))';
+
         const currentQuestionPosition = @Model.CurrentQuestionPosition;
         const totalQuestions = @Model.TotalQuestions;
         const isLastQuestion = currentQuestionPosition + 1 >= totalQuestions;
+
         const countdownElement = document.getElementById("countdown");
-        let secondsLeft = QUESTION_SECONDS;
-        
 
-        // TODO: for now use fetch, may switch to SignalR when player functionality is added
-        const correctAnswerIdPromise = fetch(`http://localhost:5129/api/Game/${joinCode}/correct-answer?questionId=${questionId}`)
-            .then(response => {
-                if (!response.ok) throw new Error(response.status); // fetch doesn't throw on 404/500
-                return response.json();
-            })
-            .catch(error => {
-                console.error("Failed to load correct answer:", error);
-                return null;
-            });
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("http://localhost:5129/hubs/game")
+            .build();
 
         
 
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
+        // timer started, count down every second
+        connection.on("TimerStarted", seconds => {
+
+            const intervalId = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = `00:${String(seconds)}`;
+                if (seconds <= 0) clearInterval(intervalId);
+            }, 1000);
+        });
+
+        // time is up, reveal the answer, then move on after 5 s to leaderboard
+        connection.on("TimerStopped", async () => {
+            await showCorrectAnswer();
+            setTimeout(goToNextScreen, 8000);
+        });
+
+
         
-        function revealCorrectAnswer(correctAnswerId) {
+        // fetch correct answer and marks it in the list
+        async function showCorrectAnswer() {
+            const response = await fetch(`http://localhost:5129/api/Game/${joinCode}/correct-answer`);
+            const correctAnswerId = await response.json();
+
             const correctAnswerElement = document.getElementById(`answer-${correctAnswerId}`);
             if (correctAnswerElement) {
                 correctAnswerElement.textContent += " ✔ correct";
             }
         }
-        
-        const countdownTimerId = setInterval(async () => {
-            secondsLeft--;
-            countdownElement.textContent = `00:${secondsLeft}`;
 
-            if (secondsLeft === 0) {
-                clearInterval(countdownTimerId);
-
-                revealCorrectAnswer(await correctAnswerIdPromise);
-
-                // Wait before going to the leaderboard page
-                await delay(REVEAL_DELAY_MS);
-                
-                if (isLastQuestion) {
-                    // Server sets Finished and redirects to LeaderBoard
-                    document.getElementById("next-form").submit();
-                } else {
-                    window.location.href = leaderboardUrl;
-                }
+        // After the last question finish the game, otherwise show the leaderboard
+        function goToNextScreen() {
+            if (isLastQuestion) {
+                // Server sets Finished and redirects to LeaderBoard
+                document.getElementById("advance-form").submit();
+            } else {
+                window.location.href = leaderboardUrl;
             }
-        }, 1000);
+        }
+
         
+        // connect, join this game's group, then start the question timer
+        connection.start()
+            .then(async () => {
+                await connection.invoke("JoinGame", joinCode);
+                await connection.invoke("StartTimer", joinCode);
+            })
+            .catch(err => console.error(err));
     </script>
 }
-
-
-
-
