@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CodeGuess.Api.Services;
 
+
 public class GameService: IGameService
 {
     private readonly AppDbContext _db;
@@ -19,20 +20,22 @@ public class GameService: IGameService
     {
         _db = db;
         _hub = hub;
-        
+
     }
-    
-    public async Task<GameResponse?> CreateGameAsync(int deckId)
+
+    public async Task<GameResponse> CreateGameAsync(int deckId)
     {
-        //TODO: check for the uniqe code generetion
+        if (!await _db.Decks.AnyAsync(d => d.Id == deckId))
+            throw new KeyNotFoundException($"Deck {deckId} not found.");
+
         var session = new GameSession
         {
             DeckId = deckId,
-            JoinCode = GenerateJoinCode(),
+            JoinCode = await GenerateUniqueJoinCodeAsync(),
             CreatedAt = DateTime.UtcNow
         };
 
-        
+
         _db.GameSessions.Add(session);
         await _db.SaveChangesAsync();
 
@@ -50,19 +53,19 @@ public class GameService: IGameService
         return response;
 
     }
-
-
-    public async Task JoinGameAsync(string joinCode, JoinGameRequest request)
+    
+    public async Task<int> JoinGameAsync(string joinCode, JoinGameRequest request)
     {
-        GameSession? session = await _db.GameSessions
-            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
+        var session = await GetSessionAsync(joinCode);
 
-        if (session == null)
-        {
-            throw new KeyNotFoundException("Game session not found.");
-        }
-        
-        
+        if (session.State != GameState.Lobby)
+            throw new InvalidOperationException("This game has already started.");
+
+        var nicknameTaken = await _db.Players
+            .AnyAsync(p => p.GameSessionId == session.Id && p.Nickname == request.Nickname);
+
+        if (nicknameTaken)
+            throw new InvalidOperationException("This nickname is already taken.");
 
         var newPlayer = new Player
         {
@@ -74,45 +77,35 @@ public class GameService: IGameService
 
         _db.Players.Add(newPlayer);
         await _db.SaveChangesAsync();
-        
-       
-        
+
         //Broadcasts an update to everyone subscribed
         await _hub.Clients.Group(joinCode).SendAsync("PlayerJoined", request.Nickname);   // tell everyone in that room
+
+        return newPlayer.Id;
 
     }
 
     public async Task StartGameAsync(string joinCode)
     {
-        var session = await _db.GameSessions
-            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
-        
-        if (session == null)
-        {
-            throw new KeyNotFoundException("Game session not found.");
-        }
+        var session = await GetSessionAsync(joinCode);
+
+        if (session.State != GameState.Lobby)
+            throw new InvalidOperationException("This game has already started.");
+
         session.State = GameState.Question;
         await _db.SaveChangesAsync();
-        
+
         await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State); // tell everyone in that room
 
-        //todo: get list of answer n clean up
+        // send the first question's answer options to players
         List<AnswerOptionResponse> answers = await GetAnswerOptionsAsync(session.DeckId, session.CurrentQuestionPosition);
         await _hub.Clients.Group(joinCode).SendAsync("NewQuestion", answers);
-        
 
-        
     }
 
     public async Task<GameResponse> GetGameAsync(string joinCode)
     {
-        var session = await _db.GameSessions
-            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
-
-        if (session == null)
-        {
-            throw new KeyNotFoundException("Game session not found.");
-        }
+        var session = await GetSessionAsync(joinCode);
 
         var question = await _db.Questions
             .FirstOrDefaultAsync(q => q.DeckId == session.DeckId
@@ -142,19 +135,14 @@ public class GameService: IGameService
             },
             AnswerOptions = answers
         };
+
     }
 
     public async Task<List<PlayerResponse>> GetLeaderboardAsync(string joinCode)
     {
-        var session = await _db.GameSessions
-            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
-        
-        if (session == null)
-        {
-            throw new KeyNotFoundException("Game session not found."); 
-        }
+        var session = await GetSessionAsync(joinCode);
 
-        //get players and sort them by their score 
+        //get players and sort them by their score
         var players = await _db.Players
             .Where(p => p.GameSessionId == session.Id)
             .OrderByDescending(p => p.Score)
@@ -174,38 +162,33 @@ public class GameService: IGameService
             });
 
         }
-        
+
         return leaderboard;
     }
-
-
-    public async Task<int> GetCorrectAnswerIdAsync(string joinCode, int questionId)
+    
+    public async Task<int> GetCorrectAnswerIdAsync(string joinCode)
     {
-        var session = await _db.GameSessions
-            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
+        var session = await GetSessionAsync(joinCode);
+        var question = await GetCurrentQuestionAsync(session);
 
-        //TODO: add error checks later
+        var correctAnswer = await _db.AnswerOptions
+            .FirstOrDefaultAsync(a => a.QuestionId == question.Id && a.IsCorrect);
 
-        var correctAnswerId = await _db.AnswerOptions
-            .Where(a => a.QuestionId == questionId && a.IsCorrect)
-            .Select(a => a.Id)
-            .FirstOrDefaultAsync();
+        if (correctAnswer == null)
+            throw new KeyNotFoundException("This question has no correct answer.");
 
-        return correctAnswerId;
+        return correctAnswer.Id;
     }
 
-    public async Task<GameState> NextQuestionAsync(string joinCode)
+    public async Task<GameState> AdvanceGameAsync(string joinCode)
     {
-        var session = await _db.GameSessions
-            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
+        var session = await GetSessionAsync(joinCode);
 
-        if (session == null)
-        {
-            throw new KeyNotFoundException("Game session not found.");
-        }
-        
+        if (session.State == GameState.Finished)
+            throw new InvalidOperationException("This game is already finished.");
+
         var totalQuestions = await CountQuestionsAsync(session.DeckId);
-        
+
         if (totalQuestions <= session.CurrentQuestionPosition + 1)
         {
             // No questions left, the game is over
@@ -217,24 +200,79 @@ public class GameService: IGameService
         }
 
         await _db.SaveChangesAsync();
-        
+
         await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State);   // tell everyone in that room
 
         if (session.State != GameState.Finished)
         {
-            
+
             List<AnswerOptionResponse> answers = await GetAnswerOptionsAsync(session.DeckId, session.CurrentQuestionPosition);
             await _hub.Clients.Group(joinCode).SendAsync("NewQuestion", answers);
         }
 
         return session.State;
+
+    }
+    
+    // Checks the player's answer for the current question and adds a point if it's correct
+    public async Task<bool> SubmitAnswerAsync(string joinCode, int playerId, int answerId)
+    {
+        var session = await GetSessionAsync(joinCode);
+
+        var player = await _db.Players
+            .FirstOrDefaultAsync(p => p.Id == playerId && p.GameSessionId == session.Id);
+
+        if (player == null)
+            throw new KeyNotFoundException($"Player {playerId} not found in this game.");
+
+        var question = await GetCurrentQuestionAsync(session);
+
+        var answer = await _db.AnswerOptions
+            .FirstOrDefaultAsync(a => a.Id == answerId && a.QuestionId == question.Id);
+
+        if (answer == null)
+            throw new InvalidOperationException("This answer is not an option for the current question.");
+
+        if (!answer.IsCorrect)
+            return false;
+
+        //todo: implement a better scoring algorithm
+        player.Score++;
+        await _db.SaveChangesAsync();
+        return true;
     }
 
-    
-    
+
+    //helpers
+
+    // loads the game
+    private async Task<GameSession> GetSessionAsync(string joinCode)
+    {
+        var session = await _db.GameSessions
+            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
+
+        if (session == null)
+            throw new KeyNotFoundException($"Game {joinCode} not found.");
+
+        return session;
+    }
+
+    // The question the game is on right now
+    private async Task<Question> GetCurrentQuestionAsync(GameSession session)
+    {
+        var question = await _db.Questions
+            .FirstOrDefaultAsync(q => q.DeckId == session.DeckId
+                                   && q.Position == session.CurrentQuestionPosition);
+
+        if (question == null)
+            throw new KeyNotFoundException("The current question was not found.");
+
+        return question;
+    }
+
     private async Task<List<AnswerOptionResponse>> GetAnswerOptionsAsync(int deckId, int questionPosition)
     {
-        
+
         var question = await _db.Questions
             .FirstOrDefaultAsync(q => q.DeckId == deckId
                                       && q.Position == questionPosition);
@@ -246,7 +284,7 @@ public class GameService: IGameService
                 .Select(a => new AnswerOptionResponse { Id = a.Id, Text = a.Text })
                 .ToListAsync();
         return answers;
-        
+
     }
 
     private Task<int> CountQuestionsAsync(int deckId)
@@ -254,7 +292,21 @@ public class GameService: IGameService
         return _db.Questions.CountAsync(q => q.DeckId == deckId);
     }
 
-    //creates the short codes players type in to join a game                                                                                                                          
+    // Keeps generating codes until one isn't used by another game
+    private async Task<string> GenerateUniqueJoinCodeAsync()
+    {
+        string joinCode;
+
+        do
+        {
+            joinCode = GenerateJoinCode();
+        }
+        while (await _db.GameSessions.AnyAsync(s => s.JoinCode == joinCode));
+
+        return joinCode;
+    }
+
+    //creates the short codes players type in to join a game
     private static string GenerateJoinCode()
     {
         const string allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

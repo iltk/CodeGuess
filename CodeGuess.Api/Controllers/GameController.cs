@@ -22,60 +22,138 @@ public class GameController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GameResponse>> CreateGame(CreateGameRequest request)
     {
-        var game = await _gameService.CreateGameAsync(request.DeckId);
-
-        if (game == null)
-            return NotFound($"Deck {request.DeckId} not found");
-
-        return Ok(game);
+        try
+        {
+            var game = await _gameService.CreateGameAsync(request.DeckId);
+            return Ok(game);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
-    // POST api/game/ABCD/join   body: { "nickname": "Sam" }
+    // POST api/game/ABCD/join   body: { "nickname": "JJJ" }
     [HttpPost("{joinCode}/join")]
-    public async Task<ActionResult> JoinGame(string joinCode, JoinGameRequest request)
+    public async Task<ActionResult<int>> JoinGame(string joinCode, JoinGameRequest request)
     {
-        await _gameService.JoinGameAsync(joinCode, request);
-        return Ok();
+        try
+        {
+            var playerId = await _gameService.JoinGameAsync(joinCode, request);
+            return Ok(playerId);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     // POST api/game/ABCD/start
     [HttpPost("{joinCode}/start")]
     public async Task<ActionResult> StartGame(string joinCode)
     {
-        await _gameService.StartGameAsync(joinCode);
-        return Ok();
+        try
+        {
+            await _gameService.StartGameAsync(joinCode);
+            return Ok();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     // GET api/game/ABCD
     [HttpGet("{joinCode}")]
     public async Task<ActionResult<GameResponse>> GetGame(string joinCode)
     {
-        var game = await _gameService.GetGameAsync(joinCode);
-        return Ok(game);
+        try
+        {
+            var game = await _gameService.GetGameAsync(joinCode);
+            return Ok(game);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     // GET api/game/ABCD/leaderboard
     [HttpGet("{joinCode}/leaderboard")]
     public async Task<ActionResult<List<PlayerResponse>>> GetLeaderboard(string joinCode)
     {
-        var leaderboard = await _gameService.GetLeaderboardAsync(joinCode);
-        return Ok(leaderboard);
+        try
+        {
+            var leaderboard = await _gameService.GetLeaderboardAsync(joinCode);
+            return Ok(leaderboard);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
-    // GET api/game/ABCD/correct-answer?questionId=5
+    // GET api/game/ABCD/correct-answer
     [HttpGet("{joinCode}/correct-answer")]
-    public async Task<ActionResult<int>> GetCorrectAnswerId(string joinCode, int questionId)
+    public async Task<ActionResult<int>> GetCorrectAnswerId(string joinCode)
     {
-        var correctAnswerId = await _gameService.GetCorrectAnswerIdAsync(joinCode, questionId);
-        return Ok(correctAnswerId);
+        try
+        {
+            var correctAnswerId = await _gameService.GetCorrectAnswerIdAsync(joinCode);
+            return Ok(correctAnswerId);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
-    [HttpPost("{joinCode}/next")]
-    public async Task<ActionResult<GameState>> NextQuestion(string joinCode)
+    // POST api/game/ABCD/advance  
+    [HttpPost("{joinCode}/advance")]
+    public async Task<ActionResult<GameState>> AdvanceGame(string joinCode)
     {
-        // Move the game session to the next question (or finish it)
-        var state = await _gameService.NextQuestionAsync(joinCode);
-
-        return Ok(state);
+        try
+        {
+            var state = await _gameService.AdvanceGameAsync(joinCode);
+            return Ok(state);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
+
+
+    // POST api/game/ABCD/answer   body: { "playerId": 7, "answerId": 12 }
+    [HttpPost("{joinCode}/answer")]
+    public async Task<ActionResult<bool>> SubmitAnswer(string joinCode, SubmitAnswerRequest request)
+    {
+        try
+        {
+            var isCorrect = await _gameService.SubmitAnswerAsync(joinCode, request.PlayerId, request.AnswerId);
+            return Ok(isCorrect);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+
 }

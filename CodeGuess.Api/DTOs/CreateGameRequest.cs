@@ -1,7 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace CodeGuess.Api.DTOs;
 
-// Body of POST api/game
 public class CreateGameRequest
 {
+    [Range(1, int.MaxValue)]
     public int DeckId { get; set; }
 }

@@ -3,7 +3,6 @@ using CodeGuess.Api.Models;
 namespace CodeGuess.Api.DTOs;
 
 
-// What the API sends back about a game (POST api/game, GET api/game/{joinCode})
 public class GameResponse
 {
     public int Id { get; set; }
@@ -25,5 +24,5 @@ public class GameResponse
 
     public QuestionResponse? Question { get; set; }
 
-    public List<AnswerOptionResponse>? AnswerOptions { get; set; }
+    public List<AnswerOptionResponse> AnswerOptions { get; set; } = new();
 }
