@@ -74,6 +74,7 @@ namespace CodeGuess.Api.Migrations
 
                     b.Property<string>("JoinCode")
                         .IsRequired()
+                        .HasMaxLength(4)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("State")
@@ -100,6 +101,7 @@ namespace CodeGuess.Api.Migrations
 
                     b.Property<string>("Nickname")
                         .IsRequired()
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Score")
@@ -120,7 +122,7 @@ namespace CodeGuess.Api.Migrations
 
                     b.Property<string>("Code")
                         .IsRequired()
-                        .HasMaxLength(50)
+                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("DeckId")

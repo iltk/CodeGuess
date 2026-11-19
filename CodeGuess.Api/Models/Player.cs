@@ -1,10 +1,13 @@
-namespace CodeGuess.Api.Models;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
+namespace CodeGuess.Api.Models;
 
 public class Player
 {
     public int Id { get; set; }
 
+    [Required, StringLength(20)]
     public string Nickname { get; set; } = string.Empty;
 
     public int GameSessionId { get; set; }
