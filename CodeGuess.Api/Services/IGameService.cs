@@ -5,8 +5,7 @@ namespace CodeGuess.Api.Services;
 
 public interface IGameService
 {
-    // Methods throw KeyNotFoundException (not found) or InvalidOperationException (not allowed);
-    // GameController catches them and returns 404 / 400.
+    
 
     Task<GameResponse> CreateGameAsync(int deckId);
 
@@ -23,4 +22,9 @@ public interface IGameService
     Task<GameState> AdvanceGameAsync(string joinCode);
 
     Task<bool> SubmitAnswerAsync(string joinCode, int playerId, int answerId);
+
+    Task MarkQuestionStartedAsync(string joinCode);
+    
+    Task<List<AnswerOptionResponse>> GetAnswerOptionsAsync(string joinCode);
+
 }

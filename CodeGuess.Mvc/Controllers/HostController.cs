@@ -22,7 +22,11 @@ public class HostController : Controller
     {
         var decks = await _deckService.GetDecksAsync();
 
-        return View(decks);
+        var model = decks
+            .Select(deck => new DeckViewModel { Id = deck.Id, Name = deck.Name })
+            .ToList();
+
+        return View(model);
     }
 
     [HttpPost]
@@ -75,7 +79,18 @@ public class HostController : Controller
             return RedirectToAction("Index");
         }
 
-        return View(game);
+        var model = new HostQuestionViewModel
+        {
+            JoinCode = game.JoinCode,
+            CurrentQuestionPosition = game.CurrentQuestionPosition,
+            TotalQuestions = game.TotalQuestions,
+            Code = game.Question?.Code,
+            AnswerOptions = game.AnswerOptions?
+                .Select(option => new AnswerOptionViewModel { Id = option.Id, Text = option.Text })
+                .ToList() ?? new()
+        };
+
+        return View(model);
     }
 
     [HttpGet]
@@ -88,9 +103,20 @@ public class HostController : Controller
             return RedirectToAction("Index");
         }
 
-        ViewData["JoinCode"] = joinCode;
-        ViewData["GameState"] = state;
-        return View(players);
+        var model = new LeaderBoardViewModel
+        {
+            JoinCode = joinCode,
+            IsFinished = state == GameState.Finished,
+            Players = players
+                .Select(player => new LeaderBoardPlayerViewModel
+                {
+                    Nickname = player.Nickname,
+                    Score = player.Score ?? 0
+                })
+                .ToList()
+        };
+
+        return View(model);
     }
 
     [HttpPost]

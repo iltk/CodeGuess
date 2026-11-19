@@ -8,5 +8,5 @@ public class PlayerResponse
 
     public int GameSessionId { get; set; }
 
-    public int Score { get; set; }
+    public double Score { get; set; }
 }

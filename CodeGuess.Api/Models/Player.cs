@@ -13,8 +13,11 @@ public class Player
     public int GameSessionId { get; set; }
 
     public GameSession GameSession { get; set; } = null!;
+    
+    // position of the last question this player answered 
+    public int? LastAnsweredPosition { get; set; }
 
-    public int Score { get; set; } = 0;
+    public double Score { get; set; } = 0;
 
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 }

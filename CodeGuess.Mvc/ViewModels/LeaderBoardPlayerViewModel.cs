@@ -4,5 +4,5 @@ public class LeaderBoardPlayerViewModel
 {
     public string Nickname { get; set; } = "";
 
-    public int Score { get; set; }
+    public double Score { get; set; }
 }

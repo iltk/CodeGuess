@@ -31,8 +31,7 @@ public class GameService: IGameService
         var session = new GameSession
         {
             DeckId = deckId,
-            JoinCode = await GenerateUniqueJoinCodeAsync(),
-            CreatedAt = DateTime.UtcNow
+            JoinCode = await GenerateUniqueJoinCodeAsync()
         };
 
 
@@ -42,7 +41,7 @@ public class GameService: IGameService
         var response = new GameResponse
         {
             Id = session.Id,
-            CreatedAt = session.CreatedAt,
+            QuestionStartedAt = session.QuestionStartedAt,
             DeckId = session.DeckId,
             JoinCode = session.JoinCode,
             State = session.State,
@@ -97,10 +96,7 @@ public class GameService: IGameService
 
         await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State); // tell everyone in that room
 
-        // send the first question's answer options to players
-        List<AnswerOptionResponse> answers = await GetAnswerOptionsAsync(session.DeckId, session.CurrentQuestionPosition);
-        await _hub.Clients.Group(joinCode).SendAsync("NewQuestion", answers);
-
+        // the answer options are sent by GameTimerService ("QuestionStarted") when the host's timer starts
     }
 
     public async Task<GameResponse> GetGameAsync(string joinCode)
@@ -124,7 +120,7 @@ public class GameService: IGameService
             JoinCode = session.JoinCode,
             DeckId = session.DeckId,
             State = session.State,
-            CreatedAt = session.CreatedAt,
+            QuestionStartedAt = session.QuestionStartedAt,
             CurrentQuestionPosition = session.CurrentQuestionPosition,
             TotalQuestions = await CountQuestionsAsync(session.DeckId),
             Question = question == null ? null : new QuestionResponse
@@ -150,7 +146,7 @@ public class GameService: IGameService
 
         var leaderboard = new List<PlayerResponse>();
 
-        foreach (var player in players)
+        foreach (Player player in players)
         {
             leaderboard.Add(new PlayerResponse
             {
@@ -203,20 +199,16 @@ public class GameService: IGameService
 
         await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State);   // tell everyone in that room
 
-        if (session.State != GameState.Finished)
-        {
-
-            List<AnswerOptionResponse> answers = await GetAnswerOptionsAsync(session.DeckId, session.CurrentQuestionPosition);
-            await _hub.Clients.Group(joinCode).SendAsync("NewQuestion", answers);
-        }
-
         return session.State;
 
     }
     
-    // Checks the player's answer for the current question and adds a point if it's correct
+    // Checks the player's answer for the current question and adds time-based points if it's correct.
+    // Each player can answer each question only once.
     public async Task<bool> SubmitAnswerAsync(string joinCode, int playerId, int answerId)
     {
+        DateTime receivedAt = DateTime.UtcNow;
+
         var session = await GetSessionAsync(joinCode);
 
         var player = await _db.Players
@@ -233,11 +225,40 @@ public class GameService: IGameService
         if (answer == null)
             throw new InvalidOperationException("This answer is not an option for the current question.");
 
-        if (!answer.IsCorrect)
-            return false;
+        if (player.LastAnsweredPosition == session.CurrentQuestionPosition)
+            throw new InvalidOperationException("You already answered this question.");
 
-        //todo: implement a better scoring algorithm
-        player.Score++;
+        // remember this question is answered, whether the answer is right or wrong
+        player.LastAnsweredPosition = session.CurrentQuestionPosition;
+
+        if (!answer.IsCorrect)
+        {
+            await _db.SaveChangesAsync();
+            return false;
+        }
+
+        // formula taken from Kahoot 
+        //Points=( 1−  Response Time /Total Time for Question  ×0.5)× Max Points
+        //response  time: time that took player to answer  
+        double responseTime = (double)((receivedAt - session.QuestionStartedAt)?.TotalSeconds ?? 0);
+
+        if (responseTime == 0)
+        {
+            throw new InvalidOperationException("Time must be greater than zero.");
+        }
+        
+        //max points that player can get per question
+        double maxPoints = 1000;
+        double responseRatio = responseTime / 10;
+        
+        //award player full points 
+        if (responseTime <= 0.5) {
+            responseRatio = 0;
+        }
+        
+        double score = Math.Round((1 - (responseRatio * 0.5)) * maxPoints);
+        
+        player.Score += score;
         await _db.SaveChangesAsync();
         return true;
     }
@@ -245,7 +266,15 @@ public class GameService: IGameService
 
     //helpers
 
-    // loads the game
+    //used in start timer service when timer starts it marks the time stamp when it was created
+    public async Task MarkQuestionStartedAsync(string joinCode)    
+    
+    {                                                                                                                                                                                  
+        var session = await GetSessionAsync(joinCode);                                                                                                                                 
+        session.QuestionStartedAt = DateTime.UtcNow;                                                                                                                                   
+        await _db.SaveChangesAsync();                                                                                                                                                  
+    }
+
     private async Task<GameSession> GetSessionAsync(string joinCode)
     {
         var session = await _db.GameSessions
@@ -270,12 +299,13 @@ public class GameService: IGameService
         return question;
     }
 
-    private async Task<List<AnswerOptionResponse>> GetAnswerOptionsAsync(int deckId, int questionPosition)
+    public async Task<List<AnswerOptionResponse>> GetAnswerOptionsAsync(string joinCode)
     {
+        var session = await GetSessionAsync(joinCode);
 
         var question = await _db.Questions
-            .FirstOrDefaultAsync(q => q.DeckId == deckId
-                                      && q.Position == questionPosition);
+            .FirstOrDefaultAsync(q => q.DeckId == session.DeckId
+                                      && q.Position == session.CurrentQuestionPosition);
 
         var answers = question == null
             ? new List<AnswerOptionResponse>()
