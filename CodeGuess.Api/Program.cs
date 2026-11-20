@@ -13,7 +13,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register services
 builder.Services.AddScoped<IDeckService, DeckService>();
 builder.Services.AddScoped<IGameService, GameService>();
-builder.Services.AddSingleton<IGameTimerService, GameTimerService>();                                                                                                                                 
+builder.Services.AddScoped<IGameTimerService, GameTimerService>();                                                                                                                                 
 
 builder.Services.AddSignalR();
 

@@ -3,7 +3,6 @@ using CodeGuess.Mvc.Models;
 
 namespace CodeGuess.Mvc.Services;
 
-// Every method returns null (or false) when the API says no or can't be reached
 public class GameService : IGameService
 {
     private readonly HttpClient _http;
@@ -26,7 +25,7 @@ public class GameService : IGameService
         }
         catch (HttpRequestException)
         {
-            return null; // API is down
+            return null; 
         }
     }
 
@@ -41,12 +40,12 @@ public class GameService : IGameService
             if (!response.IsSuccessStatusCode)
                 return null;
 
-            // API returns the new player's id
+           
             return await response.Content.ReadFromJsonAsync<int>();
         }
         catch (HttpRequestException)
         {
-            return null; // API is down
+            return null; 
         }
     }
 
@@ -59,7 +58,7 @@ public class GameService : IGameService
         }
         catch (HttpRequestException)
         {
-            return false; // API is down
+            return false; 
         }
     }
 
@@ -76,7 +75,7 @@ public class GameService : IGameService
         }
         catch (HttpRequestException)
         {
-            return null; // API is down
+            return null; 
         }
     }
 
@@ -98,7 +97,7 @@ public class GameService : IGameService
         }
         catch (HttpRequestException)
         {
-            return null; // API is down
+            return null;
         }
     }
 
@@ -115,7 +114,7 @@ public class GameService : IGameService
         }
         catch (HttpRequestException)
         {
-            return null; // API is down
+            return null; 
         }
     }
 

@@ -2,7 +2,6 @@ using CodeGuess.Mvc.DTOs;
 
 namespace CodeGuess.Mvc.Services;
 
-// gets deck data from the API
 public class DeckService : IDeckService
 {
     private readonly HttpClient _http;
@@ -20,7 +19,7 @@ public class DeckService : IDeckService
         }
         catch (HttpRequestException)
         {
-            return new(); // API is down or returned an error: show no decks
+            return new(); 
         }
     }
 }
