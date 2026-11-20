@@ -28,15 +28,19 @@
     <div id="correct-answer-section" class="tab-content d-none">
         
         <div id="answered-view" class="d-none">
+            
             <p id="waiting-message" class="d-block">
                 Waiting...
             </p>
-            
+
             <p id="player-answer">
 
             </p>
 
             <p id="answer-result"></p>
+            
+            <p id="score"></p>
+            <p id="place"></p>
 
         </div>
         
@@ -88,6 +92,8 @@
         const waitingMessage = document.getElementById("waiting-message");
         const playerAnswerElement = document.getElementById("player-answer");
         const answerResultElement = document.getElementById("answer-result");
+        const scoreElement = document.getElementById("score");
+        const placeElement = document.getElementById("place");
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5129/hubs/game")
@@ -125,16 +131,11 @@
             }
             
             const isCorrect = await answerRequest;
-            //it works prints the right thing now just dipslay it nicely
-            const response = await fetch(`http://localhost:5129/api/Game/${joinCode}/players/${playerId}/place`);
-            const place = await response.json();
-            console.log(place);
-
             if (isCorrect === null) {
-                
                 show(timeUpView);  
                 return;
             }
+            
             showAnswerResult(isCorrect);
         });
 
@@ -206,9 +207,24 @@
 
             return await res.json();
         }
+        
+        
+        async function getStat(){
+            const res = await fetch(`http://localhost:5129/api/Game/${joinCode}/players/${playerId}/stat`);
+            
+            if (!res.ok) {
+                const err = await res.json().catch(() => null);
+                console.error(res.status, err);
+                return null;
+            }
+            const stat = await res.json();
+            
+            console.log(stat.score, stat.place);
+            return stat;
+        }
 
         // Show green "Correct" or red "Incorrect" under the player's answer
-        function showAnswerResult(isCorrect) {
+        async function showAnswerResult(isCorrect) {
             show(answeredView);
             hide(waitingMessage); 
 
@@ -217,6 +233,13 @@
             playerAnswerElement.classList.add(colorClass);
             answerResultElement.classList.add(colorClass);
             answerResultElement.textContent = isCorrect ? "Correct" : "Incorrect";
+            
+            
+            //show score and use place 
+            const stat = await getStat();
+          
+            scoreElement.textContent = `Your score is: ${stat.score}`;
+            placeElement.textContent = `Your place is: ${stat.place}`;
         }
 
         // Put the answer views back to their starting state before the next question
@@ -234,6 +257,11 @@
 
             answerResultElement.textContent = "";
             answerResultElement.classList.remove("text-success", "text-danger");
+
+            scoreElement.textContent = "";
+            placeElement.textContent = "";
+            
+            
         }
 
         // show the section  according to game state
