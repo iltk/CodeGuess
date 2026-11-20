@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CodeGuess.Mvc.Controllers;
 
-// Screens for the person hosting a game
 public class HostController : Controller
 {
     private readonly IDeckService _deckService;
@@ -18,7 +17,7 @@ public class HostController : Controller
     }
 
 
-    public async Task<IActionResult> Index() // GET /host
+    public async Task<IActionResult> Index() 
     {
         var decks = await _deckService.GetDecksAsync();
 
@@ -40,7 +39,6 @@ public class HostController : Controller
 
         var game = await _gameService.CreateGameAsync(deckId);
 
-        // if API failed
         if (game == null)
         {
             TempData["Error"] = "Could not create the game. Try again.";
@@ -124,7 +122,6 @@ public class HostController : Controller
     {
         var state = await _gameService.AdvanceGameAsync(joinCode);
 
-        // API call failed: stay on the leaderboard
         if (state == null)
         {
             TempData["Error"] = "Could not go to the next question. Try again.";
