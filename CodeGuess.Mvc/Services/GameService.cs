@@ -29,7 +29,7 @@ public class GameService : IGameService
         }
     }
 
-    public async Task<int?> JoinGameAsync(JoinGameRequest request)
+    public async Task<(int? PlayerId, string? Error)> JoinGameAsync(JoinGameRequest request)
     {
         try
         {
@@ -38,14 +38,16 @@ public class GameService : IGameService
                 new { request.Nickname });
 
             if (!response.IsSuccessStatusCode)
-                return null;
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                return (null, error);
+            }
 
-           
-            return await response.Content.ReadFromJsonAsync<int>();
+            return (await response.Content.ReadFromJsonAsync<int>(), null);
         }
         catch (HttpRequestException)
         {
-            return null; 
+            return (null, "Can't reach the server. Try again later.");
         }
     }
 

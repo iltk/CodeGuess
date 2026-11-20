@@ -30,11 +30,11 @@ public class PlayController : Controller
             Nickname = model.Nickname
         };
 
-        var playerId = await _gameService.JoinGameAsync(request);
+        var (playerId, error) = await _gameService.JoinGameAsync(request);
 
         if (playerId == null)
         {
-            TempData["Error"] = "Could not join. Check the game code, or try another nickname.";
+            TempData["Error"] = error;
             return View("Index", model);
         }
 

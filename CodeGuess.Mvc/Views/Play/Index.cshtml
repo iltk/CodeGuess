@@ -1,5 +1,10 @@
 @model JoinGameViewModel
 
+@if (TempData["Error"] != null)
+{
+    <p class="text-danger">@TempData["Error"]</p>
+}
+
 <form asp-controller="Play" asp-action="Join" method="post">
 
     <input asp-for="JoinCode" placeholder="Game code" />

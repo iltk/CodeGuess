@@ -7,7 +7,7 @@ public interface IGameService
 {
     Task<GameResponse?> CreateGameAsync(int deckId);
 
-    Task<int?> JoinGameAsync(JoinGameRequest request);
+    Task<(int? PlayerId, string? Error)> JoinGameAsync(JoinGameRequest request);
 
     Task<bool> StartGameAsync(string joinCode);
 
