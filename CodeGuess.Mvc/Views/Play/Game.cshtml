@@ -55,7 +55,10 @@
     </div>
 
     <div id="finished-section" class="tab-content d-none">
-        <h2>IN PROGRESS</h2>
+        
+        <h2>Result</h2>
+        <p id="final-score"></p>
+        <p id="final-place"></p>
     </div>
 
 
@@ -94,6 +97,8 @@
         const answerResultElement = document.getElementById("answer-result");
         const scoreElement = document.getElementById("score");
         const placeElement = document.getElementById("place");
+        const finalScoreElement = document.getElementById("final-score");
+        const finalPlaceElement = document.getElementById("final-place");
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5129/hubs/game")
@@ -111,6 +116,10 @@
             }
 
             showSection(state);
+
+            if (state === GameState.Finished) {
+                showResult();
+            }
         });
 
         // Server sends this when the host's timer starts
@@ -136,7 +145,7 @@
                 return;
             }
             
-            showAnswerResult(isCorrect);
+            await showAnswerResult(isCorrect);
         });
 
 
@@ -233,13 +242,21 @@
             playerAnswerElement.classList.add(colorClass);
             answerResultElement.classList.add(colorClass);
             answerResultElement.textContent = isCorrect ? "Correct" : "Incorrect";
-            
-            
-            //show score and use place 
+
+            //show score and use place
             const stat = await getStat();
-          
+
             scoreElement.textContent = `Your score is: ${stat.score}`;
             placeElement.textContent = `Your place is: ${stat.place}`;
+        }
+
+        // Show the player's final score and place in the finished section
+        async function showResult() {
+            const stat = await getStat();
+            if (!stat) return;
+
+            finalScoreElement.textContent = `Your score is: ${stat.score}`;
+            finalPlaceElement.textContent = `Your place is: ${stat.place}`;
         }
 
         // Put the answer views back to their starting state before the next question
