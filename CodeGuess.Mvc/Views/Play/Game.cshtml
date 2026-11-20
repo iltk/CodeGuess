@@ -28,15 +28,19 @@
     <div id="correct-answer-section" class="tab-content d-none">
         
         <div id="answered-view" class="d-none">
+            
             <p id="waiting-message" class="d-block">
                 Waiting...
             </p>
-            
+
             <p id="player-answer">
 
             </p>
 
             <p id="answer-result"></p>
+            
+            <p id="score"></p>
+            <p id="place"></p>
 
         </div>
         
@@ -63,7 +67,8 @@
         const joinCode = "@Model.JoinCode";
         const playerId = "@Model.PlayerId";
         let answerId;
-        //  matches the GameState enum in the API
+        
+        //  matc the GameState enum in the API
         const GameState = { Lobby: 0, Question: 1, CorrectAnswer: 2, Leaderboard: 3, Finished: 4 };
         const optionList = document.getElementById("option-list");
         
@@ -87,6 +92,8 @@
         const waitingMessage = document.getElementById("waiting-message");
         const playerAnswerElement = document.getElementById("player-answer");
         const answerResultElement = document.getElementById("answer-result");
+        const scoreElement = document.getElementById("score");
+        const placeElement = document.getElementById("place");
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("http://localhost:5129/hubs/game")
@@ -96,9 +103,8 @@
 
         // Server sends this when the host moves the game to a new state
         connection.on("StateChanged", state => {
-            // The options come later in "QuestionStarted", so don't show the
-            // question screen yet (it would still have the last question's options)
             
+            //player gets options in QuestionStarted
             if (state === GameState.Question) {
                 showOnly("get-ready-section");
                 return;
@@ -107,7 +113,7 @@
             showSection(state);
         });
 
-        // Server sends this when the host's timer starts: the question is open from now on
+        // Server sends this when the host's timer starts
         connection.on("QuestionStarted", question => {
             resetAnswerView();                  
             renderOptions(question.options);   
@@ -125,11 +131,11 @@
             }
             
             const isCorrect = await answerRequest;
-
             if (isCorrect === null) {
                 show(timeUpView);  
                 return;
             }
+            
             showAnswerResult(isCorrect);
         });
 
@@ -152,6 +158,10 @@
 
 
         //hellpers 
+        
+        //get player leaderboard score
+        //todo
+       
         
         // Make one radio button per answer option
         function renderOptions(options) {
@@ -197,9 +207,24 @@
 
             return await res.json();
         }
+        
+        
+        async function getStat(){
+            const res = await fetch(`http://localhost:5129/api/Game/${joinCode}/players/${playerId}/stat`);
+            
+            if (!res.ok) {
+                const err = await res.json().catch(() => null);
+                console.error(res.status, err);
+                return null;
+            }
+            const stat = await res.json();
+            
+            console.log(stat.score, stat.place);
+            return stat;
+        }
 
         // Show green "Correct" or red "Incorrect" under the player's answer
-        function showAnswerResult(isCorrect) {
+        async function showAnswerResult(isCorrect) {
             show(answeredView);
             hide(waitingMessage); 
 
@@ -208,6 +233,13 @@
             playerAnswerElement.classList.add(colorClass);
             answerResultElement.classList.add(colorClass);
             answerResultElement.textContent = isCorrect ? "Correct" : "Incorrect";
+            
+            
+            //show score and use place 
+            const stat = await getStat();
+          
+            scoreElement.textContent = `Your score is: ${stat.score}`;
+            placeElement.textContent = `Your place is: ${stat.place}`;
         }
 
         // Put the answer views back to their starting state before the next question
@@ -225,6 +257,11 @@
 
             answerResultElement.textContent = "";
             answerResultElement.classList.remove("text-success", "text-danger");
+
+            scoreElement.textContent = "";
+            placeElement.textContent = "";
+            
+            
         }
 
         // show the section  according to game state

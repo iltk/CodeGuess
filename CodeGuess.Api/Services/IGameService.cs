@@ -27,4 +27,6 @@ public interface IGameService
     
     Task<List<AnswerOptionResponse>> GetAnswerOptionsAsync(string joinCode);
 
+    Task<PlayerStatResponse> GetPlayerStat(string joinCode, int playerId);
+
 }

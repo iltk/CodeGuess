@@ -154,6 +154,32 @@ public class GameController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+    
+    
+    [HttpGet("{joinCode}/players/{playerId}/stat")]
+    public async Task<ActionResult<PlayerStatResponse>> GetPlayerStatRound(string joinCode, int playerId) 
+    {
+
+        try
+        {
+            var playerStat = await _gameService.GetPlayerStat(joinCode, playerId);
+            
+            return Ok(playerStat);
+
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        
+        
+        
+    }
+
 
 
 }
