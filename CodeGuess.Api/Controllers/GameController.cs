@@ -29,15 +29,13 @@ public class GameController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<GameResponse>> CreateGame(CreateGameRequest request)
     {
-        try
-        {
-            var game = await _gameService.CreateGameAsync(request.DeckId);
-            return Ok(game);
-        }
-        catch (KeyNotFoundException ex)
-        {
-            return NotFound(ex.Message);
-        }
+        var game = await _gameService.CreateGameAsync(request.DeckId);
+        
+        //if deck doesnt exists, game cant be created
+        if (game == null)
+            return NotFound();
+        
+        return Ok(game);
     }
 
     // POST api/game/ABCD/join   body: { "nickname": "JJJ" }

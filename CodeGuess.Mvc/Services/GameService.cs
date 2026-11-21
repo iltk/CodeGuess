@@ -12,6 +12,7 @@ public class GameService : IGameService
         _http = http;
     }
 
+    //todo: fix error handling 
     public async Task<GameResponse?> CreateGameAsync(int deckId)
     {
         try
@@ -28,6 +29,8 @@ public class GameService : IGameService
             return null; 
         }
     }
+    
+    
 
     public async Task<(int? PlayerId, string? Error)> JoinGameAsync(JoinGameRequest request)
     {

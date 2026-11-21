@@ -24,6 +24,8 @@ public class PlayController : Controller
     [HttpPost]
     public async Task<IActionResult> Join(JoinGameViewModel model)
     {
+        if (!ModelState.IsValid)  return View("Index", model);
+        
         var request = new JoinGameRequest
         {
             JoinCode = model.JoinCode,

@@ -23,10 +23,13 @@ public class GameService: IGameService
 
     }
 
-    public async Task<GameResponse> CreateGameAsync(int deckId)
+    public async Task<GameResponse?> CreateGameAsync(int deckId)
     {
+        //return null if deck doesnt exists
         if (!await _db.Decks.AnyAsync(d => d.Id == deckId))
-            throw new KeyNotFoundException($"Deck {deckId} not found.");
+            return null;
+        
+        int totalQuestions = await CountQuestionsAsync(deckId);
 
         var session = new GameSession
         {
@@ -38,7 +41,7 @@ public class GameService: IGameService
         _db.GameSessions.Add(session);
         await _db.SaveChangesAsync();
 
-        var response = new GameResponse
+        return new GameResponse
         {
             Id = session.Id,
             QuestionStartedAt = session.QuestionStartedAt,
@@ -46,16 +49,20 @@ public class GameService: IGameService
             JoinCode = session.JoinCode,
             State = session.State,
             CurrentQuestionPosition = session.CurrentQuestionPosition,
-            TotalQuestions = await CountQuestionsAsync(session.DeckId)
+            TotalQuestions = totalQuestions
         };
 
-        return response;
 
     }
 
     public async Task<int> JoinGameAsync(string joinCode, JoinGameRequest request)
     {
         var session = await _db.GetSessionAsync(joinCode);
+
+        if (session == null)
+        {
+            throw new InvalidOperationException("This game doesn't exist.");
+        }
 
         if (session.State != GameState.Lobby)
             throw new InvalidOperationException("This game has already started.");
