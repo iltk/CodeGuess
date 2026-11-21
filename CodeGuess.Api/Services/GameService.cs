@@ -12,6 +12,8 @@ namespace CodeGuess.Api.Services;
 
 public class GameService: IGameService
 {
+    public const int QuestionSeconds = 10;
+
     private readonly AppDbContext _db;
     private readonly IHubContext<GameHub> _hub;
 
@@ -158,6 +160,7 @@ public class GameService: IGameService
         else
         {
             session.CurrentQuestionPosition++;
+            session.QuestionStartedAt = null; // the next question starts when the host's timer does
         }
 
         await _db.SaveChangesAsync();
@@ -174,6 +177,55 @@ public class GameService: IGameService
         var session = await _db.GetSessionAsync(joinCode);
         session.QuestionStartedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+    }
+
+    // Everything the player page needs to rebuild itself after a reload
+    public async Task<PlayerRestoreResponse> GetPlayerRestoreAsync(string joinCode, int playerId)
+    {
+        var session = await _db.GetSessionAsync(joinCode);
+
+        var player = await _db.Players
+            .FirstOrDefaultAsync(p => p.Id == playerId && p.GameSessionId == session.Id);
+
+        if (player == null)
+            throw new KeyNotFoundException($"Player {playerId} not found in this game.");
+
+        var response = new PlayerRestoreResponse { State = session.State };
+
+        // only a running question has options to show
+        if (session.State != GameState.Question)
+            return response;
+
+        if (session.QuestionStartedAt == null)
+        {
+            response.WaitingForTimer = true;
+            return response;
+        }
+
+        var isTimeUp = (DateTime.UtcNow - session.QuestionStartedAt.Value).TotalSeconds >= QuestionSeconds;
+
+        if (isTimeUp)
+            response.State = GameState.CorrectAnswer;
+
+        var question = await _db.GetCurrentQuestionAsync(session);
+
+        var options = await _db.AnswerOptions
+            .Where(a => a.QuestionId == question.Id)
+            .ToListAsync();
+
+        response.AnswerOptions = options
+            .Select(a => new AnswerOptionResponse { Id = a.Id, Text = a.Text })
+            .ToList();
+
+        // LastAnswerId only counts if it belongs to the current question
+        if (player.LastAnsweredPosition == session.CurrentQuestionPosition)
+        {
+            var picked = options.FirstOrDefault(a => a.Id == player.LastAnswerId);
+            response.AnswerId = picked?.Id;
+            response.IsCorrect = picked?.IsCorrect;
+        }
+
+        return response;
     }
 
 

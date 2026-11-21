@@ -99,6 +99,9 @@ namespace CodeGuess.Api.Migrations
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("LastAnswerId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("LastAnsweredPosition")
                         .HasColumnType("INTEGER");
 

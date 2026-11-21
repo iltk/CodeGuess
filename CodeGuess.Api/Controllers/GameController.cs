@@ -180,9 +180,24 @@ public class GameController : ControllerBase
         {
             return BadRequest(ex.Message);
         }
-        
-        
-        
+
+
+
+    }
+
+    // GET api/game/ABCD/players/7/restore
+    [HttpGet("{joinCode}/players/{playerId}/restore")]
+    public async Task<ActionResult<PlayerRestoreResponse>> GetPlayerRestore(string joinCode, int playerId)
+    {
+        try
+        {
+            var restore = await _gameService.GetPlayerRestoreAsync(joinCode, playerId);
+            return Ok(restore);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
 

@@ -17,6 +17,9 @@ public class Player
     // position of the last question this player answered 
     public int? LastAnsweredPosition { get; set; }
 
+    // the answer option this player picked for that question
+    public int? LastAnswerId { get; set; }
+
     public double Score { get; set; } = 0;
 
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;

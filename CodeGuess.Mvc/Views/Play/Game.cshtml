@@ -250,6 +250,51 @@
             placeElement.textContent = `Your place is: ${stat.place}`;
         }
 
+        // After a reload, ask the server for the game and rebuild the page
+        async function restoreState() {
+            const res = await fetch(`http://localhost:5129/api/Game/${joinCode}/players/${playerId}/restore`);
+            if (!res.ok) return;
+
+            const game = await res.json();
+
+            if (game.state === GameState.Lobby) return;
+
+            if (game.state === GameState.Finished) {
+                showSection(GameState.Finished);
+                await showResult();
+                return;
+            }
+
+            if (game.waitingForTimer) {
+                showOnly("get-ready-section");
+                return;
+            }
+
+            resetAnswerView();
+            const picked = game.answerOptions.find(option => option.id === game.answerId);
+
+            if (picked) {
+                // already answered, show their answer again
+                playerAnswer = picked.text;
+                hasSubmitted = true;
+                answerRequest = game.isCorrect;
+                showSection(GameState.CorrectAnswer);
+                showSubmittedAnswer();
+
+                if (game.state === GameState.CorrectAnswer) {
+                    await showAnswerResult(game.isCorrect);
+                }
+            } else if (game.state === GameState.CorrectAnswer) {
+                // time ran out and they didn't answer
+                showSection(GameState.CorrectAnswer);
+                show(timeUpView);
+            } else {
+                // question is still open
+                renderOptions(game.answerOptions);
+                showSection(GameState.Question);
+            }
+        }
+
         // Show the player's final score and place in the finished section
         async function showResult() {
             const stat = await getStat();
@@ -307,11 +352,12 @@
             element.classList.add("d-none");
         }
         
-        // Connect, then join this room's group
+        // Connect, join this room's group, then rebuild the page from the server
         connection.start()
             .then(async () => {
                 //todo: handle response errors
                 await connection.invoke("JoinGame", joinCode);
+                await restoreState();
             })
             .catch(err => console.error(err));
 

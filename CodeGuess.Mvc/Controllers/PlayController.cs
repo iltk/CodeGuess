@@ -54,14 +54,4 @@ public class PlayController : Controller
 
         return View(model);
     }
-    
-    //players joins lobby - state lobby
-    // then host starts game - state - question
-    // players see the answer option
-    //player clicks on answer, and the whole screen becomes this btn
-    //times run out host shows correct and switches to leaderboard
-        //player screen also updated green/red depdning on correct
-    // host clicks next and repeat 
-    
-    
 }

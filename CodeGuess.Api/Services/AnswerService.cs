@@ -39,6 +39,7 @@ public class AnswerService : IAnswerService
 
         // remember this question is answered, whether the answer is right or wrong
         player.LastAnsweredPosition = session.CurrentQuestionPosition;
+        player.LastAnswerId = answerId;
 
         if (!answer.IsCorrect)
         {

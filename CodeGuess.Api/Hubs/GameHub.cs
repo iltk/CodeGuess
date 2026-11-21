@@ -18,6 +18,6 @@ public class GameHub: Hub
     // Host calls this once when its Question page is connected                                                                                                                         
     public async Task StartTimer(string joinCode)
     {
-        await _timer.StartAsync(joinCode, 10);
+        await _timer.StartAsync(joinCode, GameService.QuestionSeconds);
     } 
 }
