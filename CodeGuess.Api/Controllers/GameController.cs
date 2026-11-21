@@ -11,10 +11,17 @@ namespace CodeGuess.Api.Controllers;
 public class GameController : ControllerBase
 {
     private readonly IGameService _gameService;
+    private readonly IAnswerService _answerService;
+    private readonly ILeaderboardService _leaderboardService;
 
-    public GameController(IGameService gameService)
+    public GameController(
+        IGameService gameService,
+        IAnswerService answerService,
+        ILeaderboardService leaderboardService)
     {
         _gameService = gameService;
+        _answerService = answerService;
+        _leaderboardService = leaderboardService;
     }
 
 
@@ -92,7 +99,7 @@ public class GameController : ControllerBase
     {
         try
         {
-            var leaderboard = await _gameService.GetLeaderboardAsync(joinCode);
+            var leaderboard = await _leaderboardService.GetLeaderboardAsync(joinCode);
             return Ok(leaderboard);
         }
         catch (KeyNotFoundException ex)
@@ -107,7 +114,7 @@ public class GameController : ControllerBase
     {
         try
         {
-            var correctAnswerId = await _gameService.GetCorrectAnswerIdAsync(joinCode);
+            var correctAnswerId = await _answerService.GetCorrectAnswerIdAsync(joinCode);
             return Ok(correctAnswerId);
         }
         catch (KeyNotFoundException ex)
@@ -142,7 +149,7 @@ public class GameController : ControllerBase
     {
         try
         {
-            var isCorrect = await _gameService.SubmitAnswerAsync(joinCode, request.PlayerId, request.AnswerId);
+            var isCorrect = await _answerService.SubmitAnswerAsync(joinCode, request.PlayerId, request.AnswerId);
             return Ok(isCorrect);
         }
         catch (KeyNotFoundException ex)
@@ -162,7 +169,7 @@ public class GameController : ControllerBase
 
         try
         {
-            var playerStat = await _gameService.GetPlayerStat(joinCode, playerId);
+            var playerStat = await _leaderboardService.GetPlayerStat(joinCode, playerId);
             
             return Ok(playerStat);
 

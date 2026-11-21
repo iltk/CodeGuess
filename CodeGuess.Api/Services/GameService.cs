@@ -52,10 +52,10 @@ public class GameService: IGameService
         return response;
 
     }
-    
+
     public async Task<int> JoinGameAsync(string joinCode, JoinGameRequest request)
     {
-        var session = await GetSessionAsync(joinCode);
+        var session = await _db.GetSessionAsync(joinCode);
 
         if (session.State != GameState.Lobby)
             throw new InvalidOperationException("This game has already started.");
@@ -86,7 +86,7 @@ public class GameService: IGameService
 
     public async Task StartGameAsync(string joinCode)
     {
-        var session = await GetSessionAsync(joinCode);
+        var session = await _db.GetSessionAsync(joinCode);
 
         if (session.State != GameState.Lobby)
             throw new InvalidOperationException("This game has already started.");
@@ -101,7 +101,7 @@ public class GameService: IGameService
 
     public async Task<GameResponse> GetGameAsync(string joinCode)
     {
-        var session = await GetSessionAsync(joinCode);
+        var session = await _db.GetSessionAsync(joinCode);
 
         var question = await _db.Questions
             .FirstOrDefaultAsync(q => q.DeckId == session.DeckId
@@ -134,51 +134,9 @@ public class GameService: IGameService
 
     }
 
-    public async Task<List<PlayerResponse>> GetLeaderboardAsync(string joinCode)
-    {
-        var session = await GetSessionAsync(joinCode);
-
-        //get players and sort them by their score
-        var players = await _db.Players
-            .Where(p => p.GameSessionId == session.Id)
-            .OrderByDescending(p => p.Score)
-            .ToListAsync();
-
-        var leaderboard = new List<PlayerResponse>();
-
-        foreach (Player player in players)
-        {
-            leaderboard.Add(new PlayerResponse
-            {
-                Id = player.Id,
-                Nickname = player.Nickname,
-                GameSessionId = session.Id,
-                Score = player.Score,
-
-            });
-
-        }
-
-        return leaderboard;
-    }
-    
-    public async Task<int> GetCorrectAnswerIdAsync(string joinCode)
-    {
-        var session = await GetSessionAsync(joinCode);
-        var question = await GetCurrentQuestionAsync(session);
-
-        var correctAnswer = await _db.AnswerOptions
-            .FirstOrDefaultAsync(a => a.QuestionId == question.Id && a.IsCorrect);
-
-        if (correctAnswer == null)
-            throw new KeyNotFoundException("This question has no correct answer.");
-
-        return correctAnswer.Id;
-    }
-
     public async Task<GameState> AdvanceGameAsync(string joinCode)
     {
-        var session = await GetSessionAsync(joinCode);
+        var session = await _db.GetSessionAsync(joinCode);
 
         if (session.State == GameState.Finished)
             throw new InvalidOperationException("This game is already finished.");
@@ -202,187 +160,17 @@ public class GameService: IGameService
         return session.State;
 
     }
-    
-    // Checks the player's answer for the current question and adds time-based points if it's correct.
-    // Each player can answer each question only once.
-    public async Task<bool> SubmitAnswerAsync(string joinCode, int playerId, int answerId)
+
+    //used in start timer service when timer starts it marks the time stamp when it was created
+    public async Task MarkQuestionStartedAsync(string joinCode)
     {
-        DateTime receivedAt = DateTime.UtcNow;
-
-        var session = await GetSessionAsync(joinCode);
-
-        var player = await _db.Players
-            .FirstOrDefaultAsync(p => p.Id == playerId && p.GameSessionId == session.Id);
-
-        if (player == null)
-            throw new KeyNotFoundException($"Player {playerId} not found in this game.");
-
-        var question = await GetCurrentQuestionAsync(session);
-
-        var answer = await _db.AnswerOptions
-            .FirstOrDefaultAsync(a => a.Id == answerId && a.QuestionId == question.Id);
-
-        if (answer == null)
-            throw new InvalidOperationException("This answer is not an option for the current question.");
-
-        if (player.LastAnsweredPosition == session.CurrentQuestionPosition)
-            throw new InvalidOperationException("You already answered this question.");
-
-        // remember this question is answered, whether the answer is right or wrong
-        player.LastAnsweredPosition = session.CurrentQuestionPosition;
-
-        if (!answer.IsCorrect)
-        {
-            await _db.SaveChangesAsync();
-            return false;
-        }
-
-        // formula taken from Kahoot 
-        //Points=( 1−  Response Time /Total Time for Question  ×0.5)× Max Points
-        //response  time: time that took player to answer  
-        double responseTime = (double)((receivedAt - session.QuestionStartedAt)?.TotalSeconds ?? 0);
-
-        if (responseTime == 0)
-        {
-            throw new InvalidOperationException("Time must be greater than zero.");
-        }
-        
-        //max points that player can get per question
-        double maxPoints = 1000;
-        double responseRatio = responseTime / 10;
-        
-        //award player full points 
-        if (responseTime <= 0.5) {
-            responseRatio = 0;
-        }
-        
-        double score = Math.Round((1 - (responseRatio * 0.5)) * maxPoints);
-        
-        player.Score += score;
+        var session = await _db.GetSessionAsync(joinCode);
+        session.QuestionStartedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
-        return true;
     }
 
 
     //helpers
-
-    //used in start timer service when timer starts it marks the time stamp when it was created
-    public async Task MarkQuestionStartedAsync(string joinCode)    
-    
-    {                                                                                                                                                                                  
-        var session = await GetSessionAsync(joinCode);                                                                                                                                 
-        session.QuestionStartedAt = DateTime.UtcNow;                                                                                                                                   
-        await _db.SaveChangesAsync();                                                                                                                                                  
-    }
-
-    
-    public async Task<PlayerStatResponse> GetPlayerStat(string joinCode, int playerId)
-    {
-        int playerPlace = await GetPlayerPlaceAsync(joinCode, playerId);
-        double playerScore = await GetPlayerScoreAsync(joinCode, playerId);
-
-        return new PlayerStatResponse
-        {
-            Place = playerPlace,
-            Score = playerScore,
-        };
-    }
-    
-    
-    private async Task<int> GetPlayerPlaceAsync(string joinCode, int playerId)
-    {
-        
-        var session = await GetSessionAsync(joinCode);
-        
-        
-        var players = await _db.Players
-            .Where(p => p.GameSessionId == session.Id)
-            .OrderByDescending(p => p.Score)
-            .ToListAsync();
-
-        if (players == null)
-        {
-            throw new KeyNotFoundException($"Player {playerId} not found in this game.");
-        }
-        
-        int playerPosition = 1;
-        
-        foreach (Player player in players)
-        {
-            if (player.Id == playerId)
-            {
-                return playerPosition;
-            }
-            playerPosition++;
-
-        }
-
-        return 0;
-        
-    }
-
-    private async Task<double> GetPlayerScoreAsync(string joinCode, int playerId)
-    {
-        var session = await GetSessionAsync(joinCode);
-
-        var player = await _db.Players
-            .FirstOrDefaultAsync(p => p.GameSessionId == session.Id && p.Id == playerId);
-
-        if (player == null)
-        {
-            throw new KeyNotFoundException($"Player {playerId} not found in this game.");
-            
-        }
-        return player.Score;
-
-    }
-    
-
-   
-
-    private async Task<GameSession> GetSessionAsync(string joinCode)
-    {
-        var session = await _db.GameSessions
-            .FirstOrDefaultAsync(s => s.JoinCode == joinCode);
-
-        if (session == null)
-            throw new KeyNotFoundException($"Game {joinCode} not found.");
-
-        return session;
-    }
-
-    // The question the game is on right now
-    private async Task<Question> GetCurrentQuestionAsync(GameSession session)
-    {
-        var question = await _db.Questions
-            .FirstOrDefaultAsync(q => q.DeckId == session.DeckId
-                                   && q.Position == session.CurrentQuestionPosition);
-
-        if (question == null)
-            throw new KeyNotFoundException("The current question was not found.");
-
-        return question;
-    }
-
-    public async Task<List<AnswerOptionResponse>> GetAnswerOptionsAsync(string joinCode)
-    {
-        var session = await GetSessionAsync(joinCode);
-
-        var question = await _db.Questions
-            .FirstOrDefaultAsync(q => q.DeckId == session.DeckId
-                                      && q.Position == session.CurrentQuestionPosition);
-
-        var answers = question == null
-            ? new List<AnswerOptionResponse>()
-            : await _db.AnswerOptions
-                .Where(a => a.QuestionId == question.Id)
-                .Select(a => new AnswerOptionResponse { Id = a.Id, Text = a.Text })
-                .ToListAsync();
-        return answers;
-
-    }
-
-    
 
     private Task<int> CountQuestionsAsync(int deckId)
     {
