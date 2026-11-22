@@ -25,10 +25,10 @@ public class PlayController : Controller
     public async Task<IActionResult> Join(JoinGameViewModel model)
     {
         if (!ModelState.IsValid)  return View("Index", model);
-        
+
         var request = new JoinGameRequest
         {
-            JoinCode = model.JoinCode,
+            JoinCode = model.JoinCode.Trim().ToUpperInvariant(),              
             Nickname = model.Nickname
         };
 
@@ -40,7 +40,7 @@ public class PlayController : Controller
             return View("Index", model);
         }
 
-        return RedirectToAction("Game", new { joinCode = model.JoinCode, playerId });
+        return RedirectToAction("Game", new { joinCode = request.JoinCode, playerId });
     }
 
     [HttpGet]

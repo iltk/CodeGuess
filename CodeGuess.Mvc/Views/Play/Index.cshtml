@@ -5,22 +5,36 @@
     <p class="text-danger">@TempData["Error"]</p>
 }
 
-<form asp-controller="Play" asp-action="Join" method="post">
-
-    <div>
-        <input asp-for="JoinCode" placeholder="Game code" />
-        <span asp-validation-for="JoinCode"
-              class="text-danger"></span>
-    </div>
-   
+<main>
     
-    <div>
-        <input asp-for="Nickname" placeholder="Nickname"/>
-        <span asp-validation-for="Nickname"
-              class="text-danger"></span>
-    </div>
-   
     
-    <button type="submit">Join</button>
+    <section>
+        
+        <header>
+            <h1>CodeGuess</h1>
+        </header>
+        
 
-</form>
+        
+
+        
+        <form asp-controller="Play" asp-action="Join" method="post">
+
+            <p>
+                <label asp-for="JoinCode">Game Code</label>
+                <input asp-for="JoinCode" placeholder="Game code" required/>
+                <span asp-validation-for="JoinCode" class="text-danger"></span>
+            </p>
+            <p>
+                <label asp-for="Nickname">Nickname</label>
+                <input asp-for="Nickname" placeholder="Nickname" required/>
+                <span asp-validation-for="Nickname" class="text-danger"></span>
+            </p>
+
+            <footer>
+                <button type="submit">Join</button>
+            </footer>
+        </form>
+
+    </section>
+</main>
