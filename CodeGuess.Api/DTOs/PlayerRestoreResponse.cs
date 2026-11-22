@@ -5,11 +5,13 @@ namespace CodeGuess.Api.DTOs;
 // Everything the player page needs to rebuild itself after a reload
 public class PlayerRestoreResponse
 {
-    // Question while time is left, CorrectAnswer once time is up
     public GameState State { get; set; }
 
     // The question hasn't started yet
     public bool WaitingForTimer { get; set; }
+
+    // The question's time has run out
+    public bool IsTimeUp { get; set; }
 
     public List<AnswerOptionResponse> AnswerOptions { get; set; } = new();
 

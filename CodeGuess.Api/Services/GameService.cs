@@ -100,7 +100,7 @@ public class GameService: IGameService
         if (session.State != GameState.Lobby)
             throw new InvalidOperationException("This game has already started.");
 
-        session.State = GameState.Question;
+        session.State = GameState.InProgress;
         await _db.SaveChangesAsync();
 
         await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State); // tell everyone in that room
@@ -156,7 +156,7 @@ public class GameService: IGameService
         }
         else
         {
-            session.State = GameState.Question;
+            session.State = GameState.InProgress;
             session.CurrentQuestionPosition++;
             session.QuestionStartedAt = null; // the next question starts when the host's timer does
         }
@@ -191,7 +191,7 @@ public class GameService: IGameService
         var response = new PlayerRestoreResponse { State = session.State };
 
         // only a running question has options to show
-        if (session.State != GameState.Question)
+        if (session.State != GameState.InProgress)
             return response;
 
         if (session.QuestionStartedAt == null)
@@ -200,10 +200,7 @@ public class GameService: IGameService
             return response;
         }
 
-        var isTimeUp = (DateTime.UtcNow - session.QuestionStartedAt.Value).TotalSeconds >= QuestionSeconds;
-
-        if (isTimeUp)
-            response.State = GameState.CorrectAnswer;
+        response.IsTimeUp = (DateTime.UtcNow - session.QuestionStartedAt.Value).TotalSeconds >= QuestionSeconds;
 
         var question = await _db.GetCurrentQuestionAsync(session);
 

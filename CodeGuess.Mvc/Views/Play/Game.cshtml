@@ -72,7 +72,7 @@
         let answerId;
         
         //  matc the GameState enum in the API
-        const GameState = { Lobby: 0, Question: 1, CorrectAnswer: 2, Finished: 3 };
+        const GameState = { Lobby: 0, InProgress: 1, Finished: 2 };
         const optionList = document.getElementById("option-list");
         
         let answerOptions;
@@ -84,9 +84,8 @@
 
         const sectionIds = {
             [GameState.Lobby]: "lobby-section",
-            [GameState.Question]: "question-section",
+            [GameState.InProgress]: "question-section",
             [GameState.Finished]: "finished-section",
-            [GameState.CorrectAnswer]: "correct-answer-section",
         };
         
         
@@ -110,7 +109,7 @@
         connection.on("StateChanged", state => {
             
             //player gets options in QuestionStarted
-            if (state === GameState.Question) {
+            if (state === GameState.InProgress) {
                 showOnly("get-ready-section");
                 return;
             }
@@ -126,13 +125,13 @@
         connection.on("QuestionStarted", question => {
             resetAnswerView();                  
             renderOptions(question.options);   
-            showSection(GameState.Question);   
+            showSection(GameState.InProgress);   
            
         });
 
         // time is up,  show if the player was correct, or that they ran out of time
         connection.on("TimerStopped", async () => {
-            showSection(GameState.CorrectAnswer);
+            showOnly("correct-answer-section");
 
             if (!hasSubmitted) {
                 show(timeUpView);
@@ -159,7 +158,7 @@
             playerAnswer = findOptionText(Number(answerId));
             hasSubmitted = true;
 
-            showSection(GameState.CorrectAnswer);
+            showOnly("correct-answer-section");
             showSubmittedAnswer();
             answerRequest = sendAnswer();
         });
@@ -278,20 +277,20 @@
                 playerAnswer = picked.text;
                 hasSubmitted = true;
                 answerRequest = game.isCorrect;
-                showSection(GameState.CorrectAnswer);
+                showOnly("correct-answer-section");
                 showSubmittedAnswer();
 
-                if (game.state === GameState.CorrectAnswer) {
+                if (game.isTimeUp) {
                     await showAnswerResult(game.isCorrect);
                 }
-            } else if (game.state === GameState.CorrectAnswer) {
+            } else if (game.isTimeUp) {
                 // time ran out and they didn't answer
-                showSection(GameState.CorrectAnswer);
+                showOnly("correct-answer-section");
                 show(timeUpView);
             } else {
                 // question is still open
                 renderOptions(game.answerOptions);
-                showSection(GameState.Question);
+                showSection(GameState.InProgress);
             }
         }
 
@@ -346,7 +345,6 @@
             element.classList.remove("d-none");
             element.classList.add("d-block");
         }
-
         function hide(element) {
             element.classList.remove("d-block");
             element.classList.add("d-none");
@@ -355,8 +353,9 @@
         // Connect, join this room's group, then rebuild the page from the server
         connection.start()
             .then(async () => {
-                //todo: handle response errors
                 await connection.invoke("JoinGame", joinCode);
+                
+                //handles user reload, restores previous page
                 await restoreState();
             })
             .catch(err => console.error(err));

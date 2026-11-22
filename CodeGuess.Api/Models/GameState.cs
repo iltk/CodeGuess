@@ -4,8 +4,7 @@ namespace CodeGuess.Api.Models;
 public enum GameState
 {
     Lobby = 0, 
-    Question = 1,
-    CorrectAnswer = 2,
-    Finished = 3
+    InProgress = 1,
+    Finished = 2
 }
 
