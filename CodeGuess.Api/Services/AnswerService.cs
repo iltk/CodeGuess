@@ -67,21 +67,4 @@ public class AnswerService : IAnswerService
 
         return correctAnswer.Id;
     }
-
-    public async Task<List<AnswerOptionResponse>> GetAnswerOptionsAsync(string joinCode)
-    {
-        var session = await _db.GetSessionAsync(joinCode);
-
-        var question = await _db.Questions
-            .FirstOrDefaultAsync(q => q.DeckId == session.DeckId
-                                      && q.Position == session.CurrentQuestionPosition);
-
-        var answers = question == null
-            ? new List<AnswerOptionResponse>()
-            : await _db.AnswerOptions
-                .Where(a => a.QuestionId == question.Id)
-                .Select(a => new AnswerOptionResponse { Id = a.Id, Text = a.Text })
-                .ToListAsync();
-        return answers;
-    }
 }

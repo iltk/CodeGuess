@@ -2,8 +2,8 @@ using CodeGuess.Api.Models;
 
 namespace CodeGuess.Api.DTOs;
 
-// Everything the player page needs to rebuild itself after a reload
-public class PlayerRestoreResponse
+// This player's current view of the game, everything the player page needs to show it
+public class PlayerGameResponse
 {
     public GameState State { get; set; }
 

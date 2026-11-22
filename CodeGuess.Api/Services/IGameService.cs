@@ -19,6 +19,6 @@ public interface IGameService
 
     Task MarkQuestionStartedAsync(string joinCode);
 
-    Task<PlayerRestoreResponse> GetPlayerRestoreAsync(string joinCode, int playerId);
+    Task<PlayerGameResponse> GetPlayerGameAsync(string joinCode, int playerId);
 
 }

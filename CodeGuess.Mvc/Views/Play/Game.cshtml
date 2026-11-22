@@ -2,59 +2,40 @@
 
 <div id="game" data-join-code="@Model.JoinCode">
 
-    <div id="lobby-section" class="tab-content d-block">
+    <div id="lobby-section" class="tab-content">
         <h2>Lobby section</h2>
         <p>Waiting for host to start the game</p>
     </div>
 
-    <div id="question-section" class="tab-content d-none">
-        
-        <h2>Question section</h2>
-        
-        <div id="answer-form">
-            <div id="option-list">
-                
-            </div>
-            <button type="button" id="submit-answer">Submit</button>
-        </div> 
-        
-        
-    </div>
-    
-    <div id="get-ready-section" class="tab-content d-none">
-        <p>Get ready</p>
-    </div>
+    <div id="in-progress-section" class="tab-content" hidden>
 
-    <div id="correct-answer-section" class="tab-content d-none">
-        
-        <div id="answered-view" class="d-none">
-            
-            <p id="waiting-message" class="d-block">
-                Waiting...
-            </p>
+        <div id="get-ready-view" class="round-view" hidden>
+            <p>Get ready</p>
+        </div>
 
-            <p id="player-answer">
+        <div id="answering-view" class="round-view" hidden>
+            <div id="option-list"></div>
+        </div>
 
-            </p>
+        <div id="submitted-view" class="round-view" hidden>
+            <p id="submitted-answer"></p>
+            <p>Answer locked in. Waiting for the timer...</p>
+        </div>
 
+        <div id="result-view" class="round-view" hidden>
+            <p id="player-answer"></p>
             <p id="answer-result"></p>
-            
             <p id="score"></p>
             <p id="place"></p>
-
         </div>
-        
-        <div id="time-up-view" class="d-block">
-            <p>
-                Too slow. Time ran out
-                Wait for the next quastion
-            </p>
 
+        <div id="time-up-view" class="round-view" hidden>
+            <p>Time's up! Wait for the next question.</p>
         </div>
 
     </div>
 
-    <div id="finished-section" class="tab-content d-none">
+    <div id="finished-section" class="tab-content" hidden>
         
         <h2>Result</h2>
         <p id="final-score"></p>
@@ -69,29 +50,21 @@
     <script>
         const joinCode = "@Model.JoinCode";
         const playerId = "@Model.PlayerId";
-        let answerId;
-        
-        //  matc the GameState enum in the API
-        const GameState = { Lobby: 0, InProgress: 1, Finished: 2 };
-        const optionList = document.getElementById("option-list");
-        
-        let answerOptions;
-        let currentGameState = GameState.Lobby;
-        let playerAnswer;
-        let hasSubmitted = false;
-        let answerRequest = null;
-        
 
+        //  should match GameState enum in the API
+        const GameState = { Lobby: 0, InProgress: 1, Finished: 2 };
+        
+        let answerRequest = null; // the answer being sent to the server
+        let newestCallId = 0;     // id of the newest showCurrentGame call
+        
         const sectionIds = {
             [GameState.Lobby]: "lobby-section",
-            [GameState.InProgress]: "question-section",
+            [GameState.InProgress]: "in-progress-section",
             [GameState.Finished]: "finished-section",
         };
         
-        
-        const answeredView = document.getElementById("answered-view");
-        const timeUpView = document.getElementById("time-up-view");
-        const waitingMessage = document.getElementById("waiting-message");
+        const optionList = document.getElementById("option-list");
+        const submittedAnswerElement = document.getElementById("submitted-answer");
         const playerAnswerElement = document.getElementById("player-answer");
         const answerResultElement = document.getElementById("answer-result");
         const scoreElement = document.getElementById("score");
@@ -105,118 +78,54 @@
 
 
 
-        // Server sends this when the host moves the game to a new state
-        connection.on("StateChanged", state => {
-            
-            //player gets options in QuestionStarted
-            if (state === GameState.InProgress) {
-                showOnly("get-ready-section");
-                return;
-            }
-
-            showSection(state);
-
-            if (state === GameState.Finished) {
-                showResult();
-            }
-        });
-
-        // Server sends this when the host's timer starts
-        connection.on("QuestionStarted", question => {
-            resetAnswerView();                  
-            renderOptions(question.options);   
-            showSection(GameState.InProgress);   
-           
-        });
-
-        // time is up,  show if the player was correct, or that they ran out of time
-        connection.on("TimerStopped", async () => {
-            showOnly("correct-answer-section");
-
-            if (!hasSubmitted) {
-                show(timeUpView);
-                return;
-            }
-            
-            const isCorrect = await answerRequest;
-            if (isCorrect === null) {
-                show(timeUpView);  
-                return;
-            }
-            
-            await showAnswerResult(isCorrect);
-        });
+        // showCurrentGame gets the details from the server and updates the ui
+        connection.on("StateChanged", showCurrentGame);
+        connection.on("QuestionStarted", showCurrentGame);
+        connection.on("TimerStopped", showCurrentGame);
 
 
         
-        document.getElementById("submit-answer").addEventListener("click", async () => {
-            //find the selected radio btn in the AnswerId group
-            const selectedRadio = document.querySelector('input[name="AnswerId"]:checked');
-            if (!selectedRadio) return;   
-
-            answerId = selectedRadio.value;
-            playerAnswer = findOptionText(Number(answerId));
-            hasSubmitted = true;
-
-            showOnly("correct-answer-section");
-            showSubmittedAnswer();
-            answerRequest = sendAnswer();
-        });
-
-
-
-        //hellpers 
-        
-        //get player leaderboard score
-        //todo
-       
-        
-        // Make one radio button per answer option
+        // show the answer options and make one button per answer option
         function renderOptions(options) {
-            answerOptions = options;
-            optionList.innerHTML = ""; // clear the previous question's options
+            optionList.innerHTML = ""; 
 
             options.forEach(option => {
-                const label = document.createElement("label");
-                label.innerHTML = `<input type="radio" name="AnswerId" value="${option.id}" required> `;
-                label.append(option.text);
-                optionList.appendChild(label);
-                optionList.appendChild(document.createElement("br"));
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "btn btn-primary w-100 mb-2";
+                button.textContent = option.text;
+                button.addEventListener("click", () => submitAnswer(option));
+                optionList.appendChild(button);
             });
         }
 
-        // Text of the answer option with this id
-        function findOptionText(id) {
-            const option = answerOptions.find(option => option.id === id);
-            return option?.text || null;
+        function submitAnswer(option) {
+            showSubmittedAnswer(option.text);
+            answerRequest = sendAnswer(option.id);   //promise 
         }
 
-        // Show the player's answer with "Waiting for others to submit"
-        function showSubmittedAnswer() {
-            playerAnswerElement.textContent = `${playerAnswer}`;
-            show(answeredView);
+        // show the player's answer screen while they wait for the timer
+        function showSubmittedAnswer(text) {
+            submittedAnswerElement.textContent = text;
+            showRoundView("submitted-view");
         }
 
-        // Send the answer to the API returns true/false, or null if the call failed
-        async function sendAnswer() {
-            const payload = { playerId, answerId };
+        // send the answer to the API
+        async function sendAnswer(answerId) {
+            try {
+                const res = await fetch(`http://localhost:5129/api/Game/${joinCode}/answer`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ playerId, answerId })
+                });
 
-            const res = await fetch(`http://localhost:5129/api/Game/${joinCode}/answer`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },  
-                body: JSON.stringify(payload)                      
-            });
-
-            if (!res.ok) {
-                const err = await res.json().catch(() => null); 
-                console.error(res.status, err);
-                return null;
+                if (!res.ok) console.error(res.status, await res.text());
+            } catch (err) {
+                console.error(err);
             }
-
-            return await res.json();
         }
         
-        
+        //get player place and score
         async function getStat(){
             const res = await fetch(`http://localhost:5129/api/Game/${joinCode}/players/${playerId}/stat`);
             
@@ -225,129 +134,87 @@
                 console.error(res.status, err);
                 return null;
             }
-            const stat = await res.json();
-            
-            console.log(stat.score, stat.place);
-            return stat;
+            return await res.json();
         }
 
-        // Show green "Correct" or red "Incorrect" under the player's answer
-        async function showAnswerResult(isCorrect) {
-            show(answeredView);
-            hide(waitingMessage); 
-
-            const colorClass = isCorrect ? "text-success" : "text-danger";  
-
-            playerAnswerElement.classList.add(colorClass);
-            answerResultElement.classList.add(colorClass);
-            answerResultElement.textContent = isCorrect ? "Correct" : "Incorrect";
-
-            //show score and use place
-            const stat = await getStat();
-
-            scoreElement.textContent = `Your score is: ${stat.score}`;
-            placeElement.textContent = `Your place is: ${stat.place}`;
-        }
-
-        // After a reload, ask the server for the game and rebuild the page
-        async function restoreState() {
-            const res = await fetch(`http://localhost:5129/api/Game/${joinCode}/players/${playerId}/restore`);
-            if (!res.ok) return;
-
-            const game = await res.json();
-
-            if (game.state === GameState.Lobby) return;
-
-            if (game.state === GameState.Finished) {
-                showSection(GameState.Finished);
-                await showResult();
-                return;
-            }
-
-            if (game.waitingForTimer) {
-                showOnly("get-ready-section");
-                return;
-            }
-
-            resetAnswerView();
-            const picked = game.answerOptions.find(option => option.id === game.answerId);
-
-            if (picked) {
-                // already answered, show their answer again
-                playerAnswer = picked.text;
-                hasSubmitted = true;
-                answerRequest = game.isCorrect;
-                showOnly("correct-answer-section");
-                showSubmittedAnswer();
-
-                if (game.isTimeUp) {
-                    await showAnswerResult(game.isCorrect);
-                }
-            } else if (game.isTimeUp) {
-                // time ran out and they didn't answer
-                showOnly("correct-answer-section");
-                show(timeUpView);
-            } else {
-                // question is still open
-                renderOptions(game.answerOptions);
-                showSection(GameState.InProgress);
-            }
-        }
-
-        // Show the player's final score and place in the finished section
-        async function showResult() {
+        // Fetch the player's score and place and show it
+        async function showStats(scoreTarget, placeTarget) {
             const stat = await getStat();
             if (!stat) return;
 
-            finalScoreElement.textContent = `Your score is: ${stat.score}`;
-            finalPlaceElement.textContent = `Your place is: ${stat.place}`;
+            scoreTarget.textContent = `Your score is: ${stat.score}`;
+            placeTarget.textContent = `Your place is: ${stat.place}`;
         }
 
-        // Put the answer views back to their starting state before the next question
-        function resetAnswerView() {
-            hasSubmitted = false;  
-            answerId = null;
-            answerRequest = null;
+        // Show green "Correct" or red "Incorrect" under the player's answer
+        async function showAnswerResult(text, isCorrect) {
+            showRoundView("result-view");
 
-            hide(answeredView);
-            hide(timeUpView);
-            show(waitingMessage);
+            const colorClass = isCorrect ? "text-success" : "text-danger";
 
-            playerAnswerElement.textContent = "";
-            playerAnswerElement.classList.remove("text-success", "text-danger");
+            playerAnswerElement.textContent = text;
+            playerAnswerElement.className = colorClass;
+            answerResultElement.className = colorClass;
+            answerResultElement.textContent = isCorrect ? "Correct" : "Incorrect";
 
-            answerResultElement.textContent = "";
-            answerResultElement.classList.remove("text-success", "text-danger");
-
+            //clear last round's score, then show score and place
             scoreElement.textContent = "";
             placeElement.textContent = "";
-            
-            
+            await showStats(scoreElement, placeElement);
         }
 
-        // show the section  according to game state
-        function showSection(state) {
-            currentGameState = state;
-            showOnly(sectionIds[state]);
-        }
+        // get game state from the server and render ui accoridngly
+        async function showCurrentGame() {
+            const callId = ++newestCallId;
 
-        // hide every section, then show the one with this id
-        function showOnly(sectionId) {
-            document.querySelectorAll(".tab-content").forEach(section => hide(section));
+            // if the player just answered, let it finish saving first, answerRequest is promise
+            await answerRequest;
 
-            const targetSection = document.getElementById(sectionId);
-            if (targetSection) {
-                show(targetSection);
+            const res = await fetch(`http://localhost:5129/api/Game/${joinCode}/players/${playerId}/game`);
+            if (!res.ok) return;
+            const game = await res.json();
+
+            // a newer call started while this one was waiting, so this data is old
+            if (callId !== newestCallId) return;
+
+            if (game.state === GameState.Lobby) return showSection(GameState.Lobby);
+
+            if (game.state === GameState.Finished) {
+                showSection(GameState.Finished);
+                return showStats(finalScoreElement, finalPlaceElement);
             }
+
+            if (game.waitingForTimer) return showRoundView("get-ready-view");
+
+            const picked = game.answerOptions.find(option => option.id === game.answerId);
+
+            if (picked && game.isTimeUp) return showAnswerResult(picked.text, game.isCorrect);
+            if (picked) return showSubmittedAnswer(picked.text);
+            if (game.isTimeUp) return showRoundView("time-up-view");
+
+            renderOptions(game.answerOptions);
+            showRoundView("answering-view");
+        }
+
+        // hide every section, then show the one for this game state
+        function showSection(state) {
+            document.querySelectorAll(".tab-content").forEach(section => hide(section));
+            show(document.getElementById(sectionIds[state]));
+        }
+
+        // show the in-progress section with only this view visible
+        function showRoundView(viewId) {
+            showSection(GameState.InProgress);
+            document.querySelectorAll(".round-view").forEach(view => hide(view));
+            show(document.getElementById(viewId));
         }
 
         function show(element) {
-            element.classList.remove("d-none");
-            element.classList.add("d-block");
+            element.hidden = false;
         }
+
         function hide(element) {
-            element.classList.remove("d-block");
-            element.classList.add("d-none");
+            element.hidden = true;
         }
         
         // Connect, join this room's group, then rebuild the page from the server
@@ -356,7 +223,7 @@
                 await connection.invoke("JoinGame", joinCode);
                 
                 //handles user reload, restores previous page
-                await restoreState();
+                await showCurrentGame();
             })
             .catch(err => console.error(err));
 

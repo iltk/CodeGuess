@@ -185,14 +185,14 @@ public class GameController : ControllerBase
 
     }
 
-    // GET api/game/ABCD/players/7/restore
-    [HttpGet("{joinCode}/players/{playerId}/restore")]
-    public async Task<ActionResult<PlayerRestoreResponse>> GetPlayerRestore(string joinCode, int playerId)
+    // GET api/game/ABCD/players/7/game
+    [HttpGet("{joinCode}/players/{playerId}/game")]
+    public async Task<ActionResult<PlayerGameResponse>> GetPlayerGame(string joinCode, int playerId)
     {
         try
         {
-            var restore = await _gameService.GetPlayerRestoreAsync(joinCode, playerId);
-            return Ok(restore);
+            var playerGame = await _gameService.GetPlayerGameAsync(joinCode, playerId);
+            return Ok(playerGame);
         }
         catch (KeyNotFoundException ex)
         {

@@ -103,7 +103,7 @@ public class GameService: IGameService
         session.State = GameState.InProgress;
         await _db.SaveChangesAsync();
 
-        await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State); // tell everyone in that room
+        await _hub.Clients.Group(joinCode).SendAsync("StateChanged"); // tell everyone in that room
     }
 
     public async Task<GameResponse> GetGameAsync(string joinCode)
@@ -163,7 +163,7 @@ public class GameService: IGameService
 
         await _db.SaveChangesAsync();
 
-        await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State);   // tell everyone in that room
+        await _hub.Clients.Group(joinCode).SendAsync("StateChanged");   // tell everyone in that room
 
         return session.State;
 
@@ -177,8 +177,8 @@ public class GameService: IGameService
         await _db.SaveChangesAsync();
     }
 
-    // Everything the player page needs to rebuild itself after a reload
-    public async Task<PlayerRestoreResponse> GetPlayerRestoreAsync(string joinCode, int playerId)
+    //  player's current view of the game
+    public async Task<PlayerGameResponse> GetPlayerGameAsync(string joinCode, int playerId)
     {
         var session = await _db.GetSessionAsync(joinCode);
 
@@ -188,7 +188,7 @@ public class GameService: IGameService
         if (player == null)
             throw new KeyNotFoundException($"Player {playerId} not found in this game.");
 
-        var response = new PlayerRestoreResponse { State = session.State };
+        var response = new PlayerGameResponse { State = session.State };
 
         // only a running question has options to show
         if (session.State != GameState.InProgress)
