@@ -14,6 +14,7 @@ public class GameSession
     public GameState State { get; set; } = GameState.Lobby;
     public int CurrentQuestionPosition { get; set; } = 0;
 
+    //if null than hasnt started yet
     public DateTime? QuestionStartedAt { get; set; }
 
     public Deck Deck { get; set; } = null!;

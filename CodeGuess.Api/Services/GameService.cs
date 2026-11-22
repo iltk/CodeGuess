@@ -104,8 +104,6 @@ public class GameService: IGameService
         await _db.SaveChangesAsync();
 
         await _hub.Clients.Group(joinCode).SendAsync("StateChanged", session.State); // tell everyone in that room
-
-        // the answer options are sent by GameTimerService ("QuestionStarted") when the host's timer starts
     }
 
     public async Task<GameResponse> GetGameAsync(string joinCode)
@@ -154,11 +152,11 @@ public class GameService: IGameService
 
         if (totalQuestions <= session.CurrentQuestionPosition + 1)
         {
-            // No questions left, the game is over
             session.State = GameState.Finished;
         }
         else
         {
+            session.State = GameState.Question;
             session.CurrentQuestionPosition++;
             session.QuestionStartedAt = null; // the next question starts when the host's timer does
         }
