@@ -10,19 +10,27 @@
     <link rel="stylesheet" href="~/CodeGuess.Mvc.styles.css" asp-append-version="true" />
 </head>
 <body class="d-flex flex-column min-vh-100">
-@if (ViewData["HideHeaderFooter"] is not true)
-{
-    <partial name="_Header" />
-}
+<div class="row g-0 flex-grow-1">
+    <partial name="_BinaryRain" model="@("left")" />
 
-<main role="main" class="flex-grow-1 d-flex flex-column">
-    @RenderBody()
-</main>
+    <div class="col-12 col-lg d-flex flex-column cg-page">
+        <header class="cg-header">
+            <a class="cg-header-logo" asp-controller="Play" asp-action="Index">{?}</a>
+            <a class="cg-header-link" asp-controller="Host" asp-action="Index">Host a game</a>
+        </header>
 
-@if (ViewData["HideHeaderFooter"] is not true)
-{
-    <partial name="_Footer" />
-}
+        <main class="flex-grow-1 d-flex flex-column">
+            @RenderBody()
+        </main>
+
+        <footer class="cg-footer">
+            <span>CodeGuess</span>
+            <span>A live code quiz</span>
+        </footer>
+    </div>
+
+    <partial name="_BinaryRain" model="@("right")" />
+</div>
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

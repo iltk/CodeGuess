@@ -1,0 +1,15 @@
+@model string
+@* The falling digits column. Model is the side: "left" or "right" *@
+@{
+    string Digits(int n) => string.Concat(Enumerable.Range(0, n).Select(_ => Random.Shared.Next(2) == 0 ? "0" : "1"));
+}
+
+<aside class="col-auto d-none d-lg-block cg-rain-gutter cg-rain-gutter-@Model">
+    <div class="cg-rain">
+        @for (var c = 0; c < 8; c++)
+        {
+            var d = Digits(120);
+            <span class="cg-rain-col">@d@d</span>
+        }
+    </div>
+</aside>
