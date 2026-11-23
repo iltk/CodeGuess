@@ -1,0 +1,57 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap");
+
+:root {
+  /* Fonts */
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Inter", system-ui, sans-serif;
+
+  /* Grounds */
+  --color-paper:          #F2F1EC;
+  --color-surface:        #FFFFFF;
+  --color-bar:            #0B0B0B;
+
+  /*Btns */
+  --color-hover: rgba(11, 11, 11, 0.84);
+
+  /* Text */
+  --color-ink:            #111111;
+  --color-text-secondary: #444444;
+  --color-text-muted:     #555555;
+  --color-on-bar:         #F2F1EC;
+  --color-on-bar-muted:   #A3A39C;
+  --color-on-bar-faint:   #8A8A84;
+
+  /* Brand green */
+  --color-accent:         #0F6B4F;
+  --color-accent-deep:    #0F3D2E;
+  --color-accent-bright:  #2F8F5B;
+
+  /* Binary / sage */
+  --color-sage-100:       #D3E1D8;
+  --color-sage-200:       #BDD3C6;
+  --color-sage-300:       #A2C1AF;
+  --color-sage-scramble:  #9DB8A9;
+  --color-trail-1:        #1F5A44;
+  --color-trail-2:        #3B7A60;
+  --color-trail-3:        #5E957D;
+  --color-trail-4:        #86B09B;
+
+  /* Status */
+  --color-signal:         #B4361E;
+  --color-divider-soft:   #DDDBD2;
+
+  /* Point Bootstrap at the tokens */
+  --bs-body-font-family: var(--font-sans);
+  --bs-font-monospace:   var(--font-mono);
+  --bs-body-color:       var(--color-ink);
+  --bs-body-bg:          var(--color-paper);
+
+  /* Bootstrap color classes: bg-primary, text-success, etc. */
+  --bs-primary-rgb:   11, 11, 11;     /* --color-bar */
+  --bs-secondary-rgb: 68, 68, 68;     /* --color-text-secondary */
+  --bs-success-rgb:   15, 107, 79;    /* --color-accent */
+  --bs-info-rgb:      211, 225, 216;  /* --color-sage-100 */
+  --bs-danger-rgb:    180, 54, 30;    /* --color-signal */
+  --bs-light-rgb:     242, 241, 236;  /* --color-paper */
+  --bs-dark-rgb:      17, 17, 17;     /* --color-ink */
+}

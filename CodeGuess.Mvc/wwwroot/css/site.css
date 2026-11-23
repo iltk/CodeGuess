@@ -1,22 +1,169 @@
-html {
-  font-size: 14px;
+/* ==========================================================================
+   GLOBAL: Bootstrap overrides used on every page
+   ========================================================================== */
+
+/* Links */
+a {
+  color: var(--color-accent);
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+a:hover {
+  color: var(--color-ink);
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+/* Borders */
+.border-dark {
+  border-color: var(--color-ink) !important;
 }
 
-html {
-  position: relative;
-  min-height: 100%;
+/* Buttons + form fields */
+.btn,
+.form-control {
+  border-color: var(--color-ink);
+  border-radius: 0;
 }
 
-body {
-  margin-bottom: 60px;
+.form-control:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-sage-200);
 }
+
+.btn-primary {
+  background: var(--color-bar);
+  border-color: var(--color-bar);
+  color: var(--color-surface);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+  background: var(--color-hover);
+  border-color: var(--color-hover);
+  color: var(--color-surface);
+}
+
+
+/* ==========================================================================
+   HEADER: cg-header-*  (_Header.cshtml)
+   ========================================================================== */
+
+.cg-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 20px 40px;
+  border-bottom: 1.5px solid var(--color-ink);
+}
+.cg-header-logo {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  background: var(--color-ink); color: var(--color-paper);
+  font-family: var(--font-mono); font-weight: 700; text-decoration: none;
+}
+.cg-header-logo:hover { background: var(--color-accent); color: var(--color-surface); }
+.cg-header-link { color: var(--color-ink); font-weight: 500; }
+
+
+/* ==========================================================================
+   FOOTER: cg-footer  (_Footer.cshtml)
+   ========================================================================== */
+
+.cg-footer {
+  display: flex; justify-content: space-between;
+  padding: 16px 40px;
+  border-top: 1.5px solid var(--color-ink);
+  font-family: var(--font-mono); font-size: 12px; text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+
+/* ==========================================================================
+   BINARY RAIN: cg-rain-*  (falling digits in the side columns)
+   ========================================================================== */
+.cg-rain-gutter { position: relative; overflow: hidden; width: 220px; }
+.cg-rain-gutter-left  { border-right: 1.5px solid var(--color-ink); }
+.cg-rain-gutter-right { border-left:  1.5px solid var(--color-ink); }
+
+.cg-rain {
+  position: absolute; inset: 0;
+  display: flex; justify-content: center;
+  align-items: flex-start;               /* keeps each column its full height so the loop is seamless */
+  gap: 16px;                             /* with the 1ch digit, columns sit about 24px apart */
+  font-family: var(--font-mono); font-size: 13px; line-height: 16px;
+  color: var(--color-sage-200);
+  user-select: none;
+}
+
+.cg-rain-col {
+  width: 1ch;
+  word-break: break-all;                 /* one digit per line */
+  animation: cg-rain-fall 60s steps(120) infinite;
+}
+
+/* vary speed + shade so columns don't move in sync */
+.cg-rain-col:nth-child(3n+1) { animation-duration: 36s; color: var(--color-trail-3); }
+.cg-rain-col:nth-child(3n+2) { animation-duration: 48s; color: var(--color-sage-300); }
+.cg-rain-col:nth-child(4n)   { animation-duration: 80s; color: var(--color-sage-100); }
+
+@keyframes cg-rain-fall {
+  from { transform: translateY(-50%); }
+  to   { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-rain-col { animation: none; }
+}
+
+/* ==========================================================================
+   HERO: cg-hero-*  (big CodeGuess title + tagline)
+   ========================================================================== */
+.cg-hero-title {
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: clamp(56px, 8vw, 116px); line-height: .95; letter-spacing: -.06em;
+  margin-bottom: 16px;
+}
+.cg-hero-guess { color: var(--color-accent); }
+.cg-hero-scramble { color: var(--color-sage-scramble); }
+.cg-hero-tagline { font-size: 19px; color: var(--color-text-secondary); }
+
+/* ==========================================================================
+   PANEL: cg-panel-*  (box with the Join/Host tabs)
+   ========================================================================== */
+.cg-panel { width: 100%; max-width: 480px; }
+.cg-panel-tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1.5px solid var(--color-ink); }
+.cg-panel-tab {
+  display: flex; align-items: center; justify-content: center; height: 44px;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--color-ink); text-decoration: none;
+}
+.cg-panel-tab + .cg-panel-tab { border-left: 1.5px solid var(--color-ink); }
+.cg-panel-tab.active { background: var(--color-ink); color: var(--color-paper); }
+a.cg-panel-tab:hover { background: var(--color-accent); color: var(--color-surface); }
+
+/* ==========================================================================
+   FORM: cg-form-*  (labels, inputs, buttons, messages)
+   ========================================================================== */
+
+/* Labels + inputs */
+.cg-form-label {
+  display: block; margin-bottom: 8px;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-transform: uppercase;
+}
+.cg-form-input {
+  height: 56px; padding: 0 16px;
+  background: var(--color-surface); color: var(--color-ink);
+  border: 1.5px solid var(--color-ink); border-radius: 0; font-size: 17px;
+}
+.cg-form-input:focus { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+.cg-form-input-pin { height: 64px; font-family: var(--font-mono); font-size: 26px; letter-spacing: .2em; }
+
+/* Button */
+.cg-form-btn {
+  height: 60px; border: 1.5px solid var(--color-ink); border-radius: 0;
+  background: var(--color-ink); color: var(--color-surface);
+  font-weight: 600; font-size: 17px;
+}
+.cg-form-btn:hover { background: var(--color-accent); border-color: var(--color-accent); }
+
+/* Hint + error text */
+.cg-form-hint  { font-size: 15px; color: var(--color-text-muted); }
+.cg-form-error { display: block; font-size: 15px; color: var(--color-signal); }

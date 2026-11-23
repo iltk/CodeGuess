@@ -1,40 +1,74 @@
 @model JoinGameViewModel
+@{
+    ViewData["HideHeaderFooter"] = true; 
 
-@if (TempData["Error"] != null)
-{
-    <p class="text-danger">@TempData["Error"]</p>
+    var rng = new Random();
+    string Digits(int n) => string.Concat(Enumerable.Range(0, n).Select(_ => rng.Next(2) == 0 ? "0" : "1"));
 }
 
-<main>
-    
-    
-    <section>
-        
-        <header>
-            <h1>CodeGuess</h1>
-        </header>
-        
+<div class="row g-0 flex-grow-1">
+    <aside class="col-auto d-none d-lg-block cg-rain-gutter cg-rain-gutter-left" aria-hidden="true">
+        <div class="cg-rain">
+            @for (var c = 0; c < 8; c++)
+            {
+                var d = Digits(120);
+                <span class="cg-rain-col">@d@d</span>
+            }
+        </div>
+    </aside>
 
-        
+    <section class="col-12 col-lg d-flex flex-column">
+        <partial name="_Header" />
 
-        
-        <form asp-controller="Play" asp-action="Join" method="post">
+        <div class="flex-grow-1 d-flex flex-column justify-content-center align-items-center text-center px-3 py-5">
+            <h1 class="cg-hero-title" aria-label="CodeGuess">
+                <span class="cg-hero-code">Code</span><span class="cg-hero-guess">Guess</span>
+            </h1>
+            <p class="cg-hero-tagline mb-5">Read the snippet. Name the project.</p>
 
-            <p>
-                <label asp-for="JoinCode">Game Code</label>
-                <input asp-for="JoinCode" placeholder="Game code" required/>
-                <span asp-validation-for="JoinCode" class="text-danger"></span>
-            </p>
-            <p>
-                <label asp-for="Nickname">Nickname</label>
-                <input asp-for="Nickname" placeholder="Nickname" required/>
-                <span asp-validation-for="Nickname" class="text-danger"></span>
-            </p>
+            <div class="cg-panel text-start">
+                <div class="cg-panel-tabs mb-4">
+                    <span class="cg-panel-tab active">Join a game</span>
+                    <a class="cg-panel-tab" asp-controller="Host" asp-action="Index">Host a game</a>
+                </div>
 
-            <footer>
-                <button type="submit">Join</button>
-            </footer>
-        </form>
+                @if (TempData["Error"] != null)
+                {
+                    <p class="cg-form-error mb-3">@TempData["Error"]</p>
+                }
 
+                <form asp-controller="Play" asp-action="Join" method="post">
+                    <div class="mb-3">
+                        <label asp-for="JoinCode" class="cg-form-label">Game PIN</label>
+                        <input asp-for="JoinCode" class="cg-form-input cg-form-input-pin w-100" placeholder="AIIA"
+                               inputmode="text" autocomplete="off" required />
+                        <span asp-validation-for="JoinCode" class="cg-form-error"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Nickname" class="cg-form-label">Nickname</label>
+                        <input asp-for="Nickname" class="cg-form-input w-100" placeholder="nickNAME" required />
+                        <span asp-validation-for="Nickname" class="cg-form-error"></span>
+                    </div>
+
+                    <button type="submit" class="cg-form-btn w-100">Join →</button>
+                </form>
+
+                <p class="cg-form-hint mt-3">The PIN is on the host's screen.</p>
+            </div>
+        </div>
+
+        <partial name="_Footer" />
     </section>
-</main>
+
+    <aside class="col-auto d-none d-lg-block cg-rain-gutter cg-rain-gutter-right" aria-hidden="true">
+        <div class="cg-rain">
+            @for (var c = 0; c < 8; c++)
+            {
+                var d = Digits(120);
+                <span class="cg-rain-col">@d@d</span>
+            }
+        </div>
+    </aside>
+    
+</div>
