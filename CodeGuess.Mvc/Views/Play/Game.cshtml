@@ -1,11 +1,34 @@
 @model PlayGameViewModel
+@{
+    var barDigits = "101100111010010110001101011100";
+}
 
-<div id="game" data-join-code="@Model.JoinCode">
+<div id="game" class="flex-grow-1 d-flex flex-column justify-content-center align-items-center" data-join-code="@Model.JoinCode">
 
-    <div id="lobby-section" class="tab-content">
-        <h2>Lobby section</h2>
-        <p>Waiting for host to start the game</p>
-    </div>
+    <section id="lobby-section" class="tab-content cg-scene">
+        <p class="cg-kicker">You're in as</p>
+        <h1 class="cg-display" data-decode="@Model.Nickname">@Model.Nickname</h1>
+
+        <div class="cg-block">
+            <div class="cg-row-label">
+                <span>Waiting for the host<span class="cg-dots"></span></span>
+                <span class="text-muted-cg">Standing by</span>
+            </div>
+
+            <div class="cg-binbar">
+                <span class="cg-binbar-base">@foreach (var digit in barDigits) { <span>@digit</span> }</span>
+                <span class="cg-binbar-hot">@foreach (var digit in barDigits) { <span>@digit</span> }</span>
+            </div>
+
+           
+        </div>
+
+        <div class="cg-meta cg-meta-3">
+            <div><span class="cg-meta-label">Join code</span><span class="cg-meta-value">@Model.JoinCode</span></div>
+            <div><span class="cg-meta-label">Deck</span><span class="cg-meta-value cg-meta-text">@Model.DeckName</span></div>
+            <div><span class="cg-meta-label">Questions</span><span class="cg-meta-value">@Model.QuestionCount</span></div>
+        </div>
+    </section>
 
     <div id="in-progress-section" class="tab-content" hidden>
 

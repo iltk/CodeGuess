@@ -8,11 +8,13 @@ namespace CodeGuess.Mvc.Controllers;
 public class PlayController : Controller
 {
     
-    private readonly IGameService _gameService;                                                                                                                                        
+    private readonly IGameService _gameService;
+    private readonly IDeckService _deckService;                                                                                                                                        
                                                                                                                                                                                      
-    public PlayController(IGameService gameService)                                                                                                                                    
+    public PlayController(IGameService gameService, IDeckService deckService)                                                                                                                                    
     {                                                                                                                                                                                  
-        _gameService = gameService;                                                                                                                                                    
+        _gameService = gameService;
+        _deckService = deckService;                                                                                                                                                    
     }                                                                                                                                                                                  
 
     
@@ -44,12 +46,28 @@ public class PlayController : Controller
     }
 
     [HttpGet]
-    public IActionResult Game(string joinCode, int playerId)
+    public async Task<IActionResult> Game(string joinCode, int playerId)
     {
+        var game = await _gameService.GetGameAsync(joinCode);
+        var players = await _gameService.GetLeaderboardAsync(joinCode);
+        var player = players?.FirstOrDefault(p => p.Id == playerId);
+
+        if (game == null || player == null)
+        {
+            TempData["Error"] = "We couldn't find that game or player.";
+            return RedirectToAction("Index");
+        }
+
+        var decks = await _deckService.GetDecksAsync();
+        var deck = decks.FirstOrDefault(d => d.Id == game.DeckId);
+
         var model = new PlayGameViewModel
         {
-            JoinCode = joinCode,
-            PlayerId = playerId
+            JoinCode = game.JoinCode,
+            PlayerId = playerId,
+            Nickname = player.Nickname,
+            DeckName = deck?.Name ?? "Unknown deck",
+            QuestionCount = game.TotalQuestions
         };
 
         return View(model);

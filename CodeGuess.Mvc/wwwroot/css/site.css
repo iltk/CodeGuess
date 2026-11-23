@@ -44,7 +44,7 @@ a:hover {
 
 
 /* ==========================================================================
-   HEADER: cg-header-*  (_Header.cshtml)
+   HEADER: cg-header-*  (_Layout.cshtml)
    ========================================================================== */
 
 .cg-header {
@@ -63,7 +63,7 @@ a:hover {
 
 
 /* ==========================================================================
-   FOOTER: cg-footer  (_Footer.cshtml)
+   FOOTER: cg-footer  (_Layout.cshtml)
    ========================================================================== */
 
 .cg-footer {
@@ -78,6 +78,8 @@ a:hover {
 /* ==========================================================================
    BINARY RAIN: cg-rain-*  (falling digits in the side columns)
    ========================================================================== */
+.cg-page { min-width: 0; }                /* lets wide content shrink between the gutters */
+
 .cg-rain-gutter { position: relative; overflow: hidden; width: 220px; }
 .cg-rain-gutter-left  { border-right: 1.5px solid var(--color-ink); }
 .cg-rain-gutter-right { border-left:  1.5px solid var(--color-ink); }
@@ -106,10 +108,6 @@ a:hover {
 @keyframes cg-rain-fall {
   from { transform: translateY(-50%); }
   to   { transform: translateY(0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cg-rain-col { animation: none; }
 }
 
 /* ==========================================================================
@@ -167,3 +165,83 @@ a.cg-panel-tab:hover { background: var(--color-accent); color: var(--color-surfa
 /* Hint + error text */
 .cg-form-hint  { font-size: 15px; color: var(--color-text-muted); }
 .cg-form-error { display: block; font-size: 15px; color: var(--color-signal); }
+
+/* ==========================================================================
+   PLAYER LOBBY: nickname, waiting bar, game details (Play/Game.cshtml)
+   ========================================================================== */
+
+/* No display rule here: it would override the hidden attribute */
+.cg-scene { width: 100%; max-width: 640px; margin: 0 auto; padding: 48px 16px; text-align: center; }
+
+.cg-kicker {
+  margin-bottom: 8px;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.cg-display {
+  margin-bottom: 32px;
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: clamp(36px, 8vw, 64px); line-height: 1; letter-spacing: -.04em;
+  overflow-wrap: anywhere;
+}
+
+.cg-block { margin-bottom: 24px; }
+.cg-row-label {
+  display: flex; justify-content: space-between; gap: 16px;
+  margin-bottom: 8px;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+}
+.text-muted-cg { color: var(--color-text-muted); font-weight: 400; }
+.cg-hint { margin: 12px 0 0; font-size: 15px; color: var(--color-text-muted); }
+
+/* Details box */
+.cg-meta {
+  display: grid;
+  border: 1.5px solid var(--color-ink); background: var(--color-surface);
+}
+.cg-meta > div { min-width: 0; padding: 12px; }
+.cg-meta > div + div { border-left: 1.5px solid var(--color-ink); }
+.cg-meta-label {
+  display: block; margin-bottom: 4px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  text-transform: uppercase; color: var(--color-text-muted);
+}
+.cg-meta-value {
+  display: block;
+  font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+  letter-spacing: .04em; overflow-wrap: anywhere;
+}
+
+/* 3-column meta box (code / deck / questions) */
+.cg-meta-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cg-meta-text { font-family: var(--font-sans); font-size: 16px; font-weight: 600; letter-spacing: 0; }
+
+/* Waiting bar: digits with a green window sliding through, in steps */
+.cg-binbar {
+  position: relative; display: block;
+  border: 1.5px solid var(--color-ink); background: var(--color-surface);
+  font-family: var(--font-mono); font-size: 12px; line-height: 28px;
+  overflow: hidden; white-space: nowrap;
+  margin-bottom: 30px;
+}
+/* Spread the digits evenly from one end of the bar to the other */
+.cg-binbar-base,
+.cg-binbar-hot { display: flex; justify-content: space-between; padding: 0 10px; }
+.cg-binbar-base { color: var(--color-sage-300); }
+.cg-binbar-hot {
+  position: absolute; inset: 0;
+  background: var(--color-accent); color: var(--color-surface);
+  clip-path: inset(0 100% 0 0);               /* hidden at start */
+  animation: cg-binbar 8s steps(40) infinite;
+}
+@keyframes cg-binbar {
+  0%   { clip-path: inset(0 100% 0 -25%); }
+  100% { clip-path: inset(0 -25% 0 100%); }
+}
+
+/* animated "..." after "Waiting for the host" */
+.cg-dots::after { content: ""; animation: cg-dots 1.2s steps(4) infinite; }
+@keyframes cg-dots {
+  0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; }
+}

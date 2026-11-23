@@ -6,10 +6,9 @@
 function animateTitle() {
     const code = document.querySelector(".cg-hero-code");
     const guess = document.querySelector(".cg-hero-guess");
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     // window.gsap is missing if the CDN is unreachable
-    if (!code || !guess || !window.gsap || reduceMotion) return;
+    if (!code || !guess || !window.gsap) return;
 
     const FRAME_SECONDS = 0.06;     // one frame every 60ms
     const FRAMES_PER_LETTER = 3;    // a new letter locks every 180ms
