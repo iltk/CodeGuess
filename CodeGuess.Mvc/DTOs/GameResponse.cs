@@ -2,7 +2,6 @@ using CodeGuess.Mvc.Models;
 
 namespace CodeGuess.Mvc.DTOs;
 
-// Used to read the API's game JSON (POST api/game, GET api/game/{joinCode})
 public class GameResponse
 {
     public int Id { get; set; }
@@ -22,6 +21,9 @@ public class GameResponse
 
     // How many questions the deck has
     public int TotalQuestions { get; set; }
+
+    // How long each question runs
+    public int QuestionSeconds { get; set; }
 
     public QuestionResponse? Question { get; set; }
 

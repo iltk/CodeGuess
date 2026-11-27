@@ -1,5 +1,7 @@
 const joinCode = document.getElementById("lobby").dataset.joinCode;
 const list = document.getElementById("member-list");
+const startButton = document.getElementById("start-button");
+const memberCount = document.getElementById("member-count");
 
 
 //The URL is the hub's address:
@@ -12,7 +14,13 @@ connection.on("PlayerJoined", nickname => {
     const li = document.createElement("li");
     li.textContent = nickname;
     list.appendChild(li);
+    startButton.disabled = false;
+    const currentCount = memberCount.textContent;
+    memberCount.textContent = String(Number(currentCount) + 1);
+
 });
+
+
 
 
 //Connect, then join this room's group.

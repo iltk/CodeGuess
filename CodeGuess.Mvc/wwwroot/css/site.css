@@ -209,6 +209,174 @@ a.cg-panel-tab:hover { background: var(--color-accent); color: var(--color-surfa
 
 
 
+/* ==========================================================================
+   HOST LOBBY  join code + players  (Host/Lobby.cshtml)
+   ========================================================================== */
+.cg-host {
+  width: 100%; max-width: 1200px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 28px;
+  padding: 32px 24px;
+}
+
+/* Join at [url]  |  JOIN CODE */
+.cg-join-box {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  border: 1.5px solid var(--color-ink); background: var(--color-surface);
+}
+.cg-join-at {
+  display: flex; flex-direction: column; justify-content: center; gap: 8px;
+  padding: 22px 28px;
+}
+.cg-join-at-label,
+.cg-join-code-label {
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.cg-join-at-label { color: var(--color-accent); }
+.cg-join-at-url {
+  font-family: var(--font-mono); font-size: 28px; font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.cg-join-code {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding: 18px 48px;
+  background: var(--color-ink); color: var(--color-paper);
+}
+.cg-join-code-label { color: var(--color-on-bar-muted); }
+.cg-join-code-value {
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: clamp(64px, 9vw, 128px); line-height: .95; letter-spacing: .08em;
+  white-space: nowrap;
+}
+
+/* PLAYERS IN THE ROOM ............ count */
+.cg-players-head {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
+  padding-bottom: 12px; margin-bottom: 18px;
+  border-bottom: 1.5px solid var(--color-ink);
+}
+.cg-players-title {
+  margin: 0 0 6px;
+  font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.cg-players-hint { margin: 0; font-size: 16px; color: var(--color-text-secondary); }
+.cg-players-count {
+  margin: 0;
+  font-family: var(--font-mono); font-weight: 700; font-size: 32px;
+  color: var(--color-accent); white-space: nowrap;
+}
+
+/* Player chips (the <li>s host-lobby.js adds) */
+.cg-players {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
+}
+.cg-players li {
+  padding: 14px 20px;
+  border: 1.5px solid var(--color-ink); background: var(--color-surface);
+  font-family: var(--font-mono); font-size: 24px; font-weight: 700;
+  animation: cg-chip .45s cubic-bezier(.2, .8, .2, 1) both;
+}
+/* newest player = green */
+.cg-players li:last-child { background: var(--color-accent); color: var(--color-surface); }
+
+@keyframes cg-chip {
+  from { transform: scale(.85); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* No players yet: dashed box + "Waiting for the first player..." */
+.cg-players:empty {
+  min-height: 200px;
+  align-items: center;
+  border: 1.5px dashed var(--color-sage-300);
+}
+.cg-players:empty::before {
+  content: "Waiting for the first player";
+  font-family: var(--font-mono); font-size: 18px; color: var(--color-text-muted);
+}
+.cg-players:empty::after {
+  content: "";
+  font-family: var(--font-mono); font-size: 18px; color: var(--color-text-muted);
+  animation: cg-dots 1.2s steps(4) infinite;
+}
+
+/* Players (left) | game details (right) */
+.cg-host-body {
+  display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 28px;
+  align-items: start;
+}
+
+/* Deck / Questions / Time per question, stacked in one bordered box */
+.cg-game-details {
+  display: flex; flex-direction: column;
+  border: 1.5px solid var(--color-ink); background: var(--color-surface);
+}
+.cg-game-details > div { display: flex; flex-direction: column; gap: 4px; padding: 16px 20px; min-width: 0; }
+.cg-game-details > div + div { border-top: 1.5px solid var(--color-ink); }
+.cg-game-details-label {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--color-text-muted);
+}
+.cg-game-details-value { font-family: var(--font-mono); font-size: 28px; font-weight: 700; }
+.cg-game-details-deck  { font-family: var(--font-sans); font-size: 20px; font-weight: 600; overflow-wrap: anywhere; }
+
+/* Start button, centred under the players */
+.cg-host-actions { display: flex; justify-content: center; }
+.cg-host-btn { padding: 0 32px; }
+
+/* Phones: stack URL and code, and the details under the players */
+@media (max-width: 767.98px) {
+  .cg-join-box { grid-template-columns: 1fr; }
+  .cg-join-code { padding: 18px 24px; }
+  .cg-game-details { border-left: 0; border-top: 1.5px solid var(--color-ink); }
+}
+
+
+/* Deck / Questions / Time: 3 rows on the right of the join box */
+.cg-game-details {
+  display: grid; grid-template-rows: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  border-left: 1.5px solid var(--color-ink);
+}
+.cg-game-details > div {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 12px 24px;
+}
+.cg-game-details > div + div { border-top: 1.5px solid var(--color-ink); }
+.cg-game-details dt {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 400;
+  text-transform: uppercase; color: var(--color-text-muted);
+}
+.cg-game-details dd {
+  margin: 0;
+  font-family: var(--font-mono); font-size: 20px; font-weight: 700;
+}
+.cg-game-details .cg-game-details-deck {
+  font-family: var(--font-sans); font-size: 17px; font-weight: 600;
+  text-align: right; overflow-wrap: anywhere;
+}
+
+/* Start locked until a player joins */
+.cg-form-btn:disabled,
+.cg-form-btn:disabled:hover {
+  background: transparent;
+  border-color: var(--color-on-bar-faint);
+  color: var(--color-on-bar-faint);
+  cursor: not-allowed;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 

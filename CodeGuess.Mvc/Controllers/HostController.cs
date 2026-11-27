@@ -49,9 +49,26 @@ public class HostController : Controller
     }
 
     [HttpGet]
-    public IActionResult Lobby(string joinCode)
+    public async Task<IActionResult> Lobby(string joinCode)
     {
-        var model = new LobbyViewModel { JoinCode = joinCode };
+        var game = await _gameService.GetGameAsync(joinCode);
+        if (game == null)
+        {
+            TempData["Error"] = "Could not load the game.";
+            return RedirectToAction("Index");
+        }
+
+        var decks = await _deckService.GetDecksAsync();
+        var deck = decks.FirstOrDefault(d => d.Id == game.DeckId);
+
+        var model = new LobbyViewModel
+        {
+            JoinCode = game.JoinCode,
+            DeckName = deck?.Name ?? "Unknown deck",
+            QuestionCount = game.TotalQuestions,
+            QuestionSeconds = game.QuestionSeconds
+        };
+
         return View(model);
     }
 
