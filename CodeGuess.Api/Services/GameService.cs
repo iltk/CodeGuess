@@ -194,6 +194,9 @@ public class GameService: IGameService
         if (session.State != GameState.InProgress)
             return response;
 
+        response.QuestionNumber = session.CurrentQuestionPosition + 1;   // positions start at 0
+        response.QuestionCount = await CountQuestionsAsync(session.DeckId);
+
         if (session.QuestionStartedAt == null)
         {
             response.WaitingForTimer = true;

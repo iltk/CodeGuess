@@ -7,6 +7,10 @@ public class PlayerGameResponse
 {
     public GameState State { get; set; }
 
+    // "Q 03 / 10": 1-based number of the current question, and how many the deck has
+    public int QuestionNumber { get; set; }
+    public int QuestionCount { get; set; }
+
     // The question hasn't started yet
     public bool WaitingForTimer { get; set; }
 
