@@ -1,0 +1,68 @@
+@model LeaderBoardViewModel
+@{
+    ViewData["HideRain"] = true;
+
+    // everyone, highest score first
+    var ranked = Model.Players.OrderByDescending(p => p.Score).ToList();
+    
+    // 4th place and below for the "Also starring" ticker
+    var credits = ranked
+        .Select((p, i) => $"{i + 1:00} {p.Nickname} — {p.Score:N0}")
+        .Skip(3)
+        .ToList();
+}
+
+<main class="cg-final-host">
+    
+    <div>
+        <span class="cg-final-host-kicker">That's a wrap</span>
+        <h1 class="cg-final-host-title">Final results</h1>
+    </div>
+
+    <!-- order on screen: 2nd | 1st | 3rd -->
+    <section class="cg-podium" aria-label="Podium">
+        @foreach (var place in new[] { 2, 1, 3 })
+        {
+            <div class="cg-podium-spot cg-podium-@place">
+                @if (place <= ranked.Count)
+                {
+                    var player = ranked[place - 1];
+
+                    <div class="cg-podium-info">
+                        @if (place == 1)
+                        {
+                            <span class="cg-podium-winner">Winner</span>
+                        }
+                        <span class="cg-podium-name">@player.Nickname</span>
+                        <span class="cg-podium-pts">@player.Score.ToString("N0") <small>pts</small></span>
+                    </div>
+
+                    <div class="cg-podium-block">
+                        <span class="cg-podium-rank">@place</span>
+                        <span class="cg-podium-bin">@Convert.ToString(place, 2).PadLeft(2, '0')</span>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    @if (credits.Count > 0)
+    {
+        <div class="cg-credits">
+            <span class="cg-credits-label">Also starring</span>
+            <div class="cg-credits-window">
+                <!-- list twice so the loop is seamless -->
+                <div class="cg-credits-track">
+                    @foreach (var line in credits.Concat(credits))
+                    {
+                        <span>@line</span>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="cg-board-actions">
+        <a asp-controller="Host" asp-action="Index" class="cg-form-btn cg-final-btn">New game</a>
+    </div>
+</main>

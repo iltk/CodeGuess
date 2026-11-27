@@ -1,17 +1,47 @@
 @model List<DeckViewModel>
+@{
+    ViewData["Title"] = "Host a game";
+}
 
+<section class="d-flex flex-column align-items-center text-center px-3 py-5">
 
+    <h1 class="cg-hero-title">
+        <span class="cg-hero-code">Code</span><span class="cg-hero-guess">Guess</span>
+    </h1>
+    <p class="cg-hero-tagline mb-5">Read the snippet. Name the project.</p>
 
-<form asp-controller="Host" asp-action="Create" method="post">
-    <select name="DeckId" required>                                                                                                                                                    
-        
-        <option value="">-- Select a deck --</option>
+    <div class="cg-panel text-start">
 
-        @foreach (var deck in Model)
+        <nav class="cg-panel-tabs mb-4" aria-label="Mode">
+            <a asp-controller="Play" asp-action="Index" class="cg-panel-tab">Join a game</a>
+            <span class="cg-panel-tab active" aria-current="page">Host a game</span>
+        </nav>
+
+        @if (TempData["Error"] is string error)
         {
-            <option value="@deck.Id">@deck.Name</option>
+            <span class="cg-form-error mb-3">@error</span>
         }
-    </select>
 
-    <button type="submit">Create Game</button>
-</form>
+        <form asp-controller="Host" asp-action="Create" method="post" class="d-flex flex-column gap-3">
+            <div>
+                <label for="DeckId" class="cg-form-label">Choose a deck</label>
+                <select id="DeckId" name="DeckId" class="cg-form-select" required>
+                    <option value="">Select a deck</option>
+                    @foreach (var deck in Model)
+                    {
+                        <option value="@deck.Id">@deck.Name</option>
+                    }
+                </select>
+                <p class="cg-form-hint mt-2 mb-0">Public decks: no account needed.</p>
+            </div>
+
+            <button type="submit" class="cg-form-btn w-100">Create game →</button>
+        </form>
+
+        <!-- Guest note: log in does nothing for now -->
+        <div class="cg-guest-note mt-4">
+            <p>Hosting as a guest. Log in to build and host your own decks.</p>
+            <button type="button" class="btn btn-outline-dark cg-btn-ghost">Log in</button>
+        </div>
+    </div>
+</section>

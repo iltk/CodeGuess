@@ -1,17 +1,37 @@
-@model HostQuestionViewModel
+@model HostRoundViewModel
+@{
+    ViewData["HideRain"] = true;
+    var letters = "ABCD";
+}
 
-<main>
+<main class="cg-round">
 
-    <p>Question @(Model.CurrentQuestionPosition + 1) / @Model.TotalQuestions</p>
+    <div class="cg-round-head">
+        <div>
+            <p class="cg-round-kicker">Question @(Model.CurrentQuestionPosition + 1) / @Model.TotalQuestions</p>
+            <h1 class="cg-round-title">Which project is this from?</h1>
+        </div>
+        <p id="countdown" class="cg-round-timer" role="timer">00:10</p>
+    </div>
 
-    <h1>@(Model.Code ?? "No question found")</h1>
+    <!-- Code snippet -->
+    <section class="cg-snippet" aria-label="Code snippet">
+        <div class="cg-snippet-bar">
+            <span>Snippet @(Model.CurrentQuestionPosition + 1)</span>
+        </div>
+        <pre><code>@(Model.Code ?? "No question found")</code></pre>
+    </section>
 
     @if (Model.AnswerOptions.Count > 0)
     {
-        <ul>
-            @foreach (var answer in Model.AnswerOptions)
+        <ul class="cg-round-options">
+            @for (var i = 0; i < Model.AnswerOptions.Count; i++)
             {
-                <li id="answer-@answer.Id">@(answer.Text ?? "Not Available")</li>
+                var answer = Model.AnswerOptions[i];
+                <li id="answer-@answer.Id" class="cg-round-option cg-option-@(i % 4)">
+                    <span class="cg-round-letter">@letters[i % 4]</span>
+                    <span class="cg-round-text">@(answer.Text ?? "Not Available")</span>
+                </li>
             }
         </ul>
     }
@@ -19,8 +39,6 @@
     {
         <p>No questions found.</p>
     }
-
-    <p id="countdown">00:10</p>
 
     <form id="advance-form" asp-controller="Host" asp-action="Advance" method="post">
         <input type="hidden" name="joinCode" value="@Model.JoinCode" />
@@ -45,8 +63,6 @@
             .withUrl("http://localhost:5129/hubs/game")
             .build();
 
-        
-
         // timer started, count down every second
         connection.on("TimerStarted", seconds => {
 
@@ -63,8 +79,6 @@
             setTimeout(goToNextScreen, 8000);
         });
 
-
-        
         // fetch correct answer and marks it in the list
         async function showCorrectAnswer() {
             const response = await fetch(`http://localhost:5129/api/Game/${joinCode}/correct-answer`);
@@ -72,7 +86,8 @@
 
             const correctAnswerElement = document.getElementById(`answer-${correctAnswerId}`);
             if (correctAnswerElement) {
-                correctAnswerElement.textContent += " ✔ correct";
+                document.querySelector(".cg-round").classList.add("is-reveal");   // changed
+                correctAnswerElement.classList.add("is-correct");                 // changed
             }
         }
 
@@ -86,7 +101,6 @@
             }
         }
 
-        
         // connect, join this game's group, then start the question timer
         connection.start()
             .then(async () => {

@@ -23,6 +23,9 @@ public class GameResponse
     // How many questions the deck has
     public int TotalQuestions { get; set; }
 
+    // How long each question runs 
+    public int QuestionSeconds { get; set; }
+
     public QuestionResponse? Question { get; set; }
 
     public List<AnswerOptionResponse> AnswerOptions { get; set; } = new();

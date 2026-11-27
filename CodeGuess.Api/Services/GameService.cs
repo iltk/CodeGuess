@@ -51,7 +51,8 @@ public class GameService: IGameService
             JoinCode = session.JoinCode,
             State = session.State,
             CurrentQuestionPosition = session.CurrentQuestionPosition,
-            TotalQuestions = totalQuestions
+            TotalQuestions = totalQuestions,
+            QuestionSeconds = QuestionSeconds
         };
 
 
@@ -130,6 +131,7 @@ public class GameService: IGameService
             QuestionStartedAt = session.QuestionStartedAt,
             CurrentQuestionPosition = session.CurrentQuestionPosition,
             TotalQuestions = await CountQuestionsAsync(session.DeckId),
+            QuestionSeconds = QuestionSeconds,
             Question = question == null ? null : new QuestionResponse
             {
                 Id = question.Id,

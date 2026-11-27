@@ -1,21 +1,56 @@
 @model LobbyViewModel
+@{
+    ViewData["Title"] = "Lobby";
+    ViewData["HideRain"] = true;
+}
 
-<div id="lobby" data-join-code="@Model.JoinCode">
-    <h1>Room @Model.JoinCode</h1>
-    <ul id="member-list"></ul>
-    
-    <p id="member-count"></p>
-    
-    <form asp-controller="Host" asp-action="Start" method="post">                                                                                                                      
-        <input type="hidden" name="joinCode" value="@Model.JoinCode" />                                                                                                                
-        <button type="submit">Start</button>                                                                                                                                           
-    </form>     
-    
+<div id="lobby" class="cg-host" data-join-code="@Model.JoinCode">
 
+    <section class="cg-join-box" aria-label="How to join">
+        <div class="cg-join-at">
+            <span class="cg-join-at-label">Join at</span>
+            <span class="cg-join-at-url">@Context.Request.Host</span>
+        </div>
+
+        <div class="cg-join-code">
+            <span class="cg-join-code-label">Join code</span>
+            <span class="cg-join-code-value">@Model.JoinCode</span>
+        </div>
+
+        <dl class="cg-game-details">
+            <div>
+                <dt>Deck</dt>
+                <dd class="cg-game-details-deck">@Model.DeckName</dd>
+            </div>
+            <div>
+                <dt>Questions</dt>
+                <dd>@Model.QuestionCount</dd>
+            </div>
+            <div>
+                <dt>Time / question</dt>
+                <dd>@(Model.QuestionSeconds)s</dd>
+            </div>
+        </dl>
+    </section>
+
+    <section aria-label="Players" aria-live="polite">
+        <div class="cg-players-head">
+            <div>
+                <h2 class="cg-players-title">Players in the room</h2>
+            </div>
+            <p id="member-count" class="cg-players-count"></p>
+        </div>
+
+        <ul id="member-list" class="cg-players"></ul>
+    </section>
+
+    <form asp-controller="Host" asp-action="Start" method="post" class="cg-host-actions">
+        <input type="hidden" name="joinCode" value="@Model.JoinCode" />
+        <button id="start-button" type="submit" class="cg-form-btn cg-host-btn" disabled>Start game →</button>
+    </form>
 </div>
 
 @section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script src="~/js/host-lobby.js" asp-append-version="true"></script>
 }
-

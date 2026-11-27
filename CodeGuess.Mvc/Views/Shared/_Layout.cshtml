@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@{
+    var showRain = ViewData["HideRain"] as bool? != true;
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -11,7 +14,10 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 <div class="row g-0 flex-grow-1">
-    <partial name="_BinaryRain" model="@("left")" />
+    @if (showRain)
+    {
+        <partial name="_BinaryRain" model="@("left")" />
+    }
 
     <div class="col-12 col-lg d-flex flex-column cg-page">
         <header class="cg-header">
@@ -29,7 +35,10 @@
         </footer>
     </div>
 
-    <partial name="_BinaryRain" model="@("right")" />
+    @if (showRain)
+    {
+        <partial name="_BinaryRain" model="@("right")" />
+    }
 </div>
 
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
