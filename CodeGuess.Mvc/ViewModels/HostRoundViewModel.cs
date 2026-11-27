@@ -1,6 +1,6 @@
 namespace CodeGuess.Mvc.ViewModels;
 
-public class HostQuestionViewModel
+public class HostRoundViewModel
 {
     public string JoinCode { get; set; } = "";
 

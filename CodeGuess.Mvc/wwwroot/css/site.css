@@ -170,6 +170,49 @@ a.cg-panel-tab:hover { background: var(--color-accent); color: var(--color-surfa
 .cg-form-error { display: block; font-size: 15px; color: var(--color-signal); }
 
 
+
+/* ==========================================================================
+   HOST INDEX (#27): deck picker + guest note  (Host/Index.cshtml)
+   ========================================================================== */
+
+/* Dropdown styled like .cg-form-input, with our own chevron */
+.cg-form-select {
+  width: 100%; height: 64px; padding: 0 52px 0 18px;
+  border: 1.5px solid var(--color-ink); border-radius: 0;
+  background: var(--color-surface)
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23111111' stroke-width='2'/%3E%3C/svg%3E")
+  no-repeat right 20px center;
+  -webkit-appearance: none; appearance: none;
+  font-size: 17px; font-weight: 600; color: var(--color-ink);
+  cursor: pointer;
+}
+.cg-form-select:focus { outline: 3px solid var(--color-accent); outline-offset: 2px; }
+
+/* "Hosting as a guest" row */
+.cg-guest-note {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+  gap: 10px 16px; padding-top: 12px;
+  border-top: 1.5px solid var(--color-ink);
+}
+.cg-guest-note p {
+  flex: 1 1 220px; margin: 0;
+  font-size: 15px; line-height: 1.45; color: var(--color-text-secondary);
+}
+
+/* small outlined mono button (Bootstrap's btn-outline-dark does the colours) */
+.cg-btn-ghost {
+  height: 44px; padding: 0 18px;
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  text-transform: uppercase;
+}
+
+
+
+
+
+
+
+
 /* ==========================================================================
    PLAYER LOBBY (P1): nickname, waiting bar, game details (Play/Game.cshtml)
    ========================================================================== */

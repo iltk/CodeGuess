@@ -64,11 +64,11 @@ public class HostController : Controller
             return RedirectToAction("Lobby", new { joinCode });
         }
 
-        return RedirectToAction("Question", new { joinCode });
+        return RedirectToAction("Round", new { joinCode });
     }
 
     [HttpGet]
-    public async Task<IActionResult> Question(string joinCode)
+    public async Task<IActionResult> Round(string joinCode)
     {
         var game = await _gameService.GetGameAsync(joinCode);
         if (game == null)
@@ -77,7 +77,7 @@ public class HostController : Controller
             return RedirectToAction("Index");
         }
 
-        var model = new HostQuestionViewModel
+        var model = new HostRoundViewModel
         {
             JoinCode = game.JoinCode,
             CurrentQuestionPosition = game.CurrentQuestionPosition,
@@ -131,6 +131,6 @@ public class HostController : Controller
         if (state == GameState.Finished)
             return RedirectToAction("LeaderBoard", new { joinCode, state });
 
-        return RedirectToAction("Question", new { joinCode });
+        return RedirectToAction("Round", new { joinCode });
     }
 }
