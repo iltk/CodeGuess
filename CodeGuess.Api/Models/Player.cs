@@ -20,6 +20,9 @@ public class Player
     // the answer option this player picked for that question
     public int? LastAnswerId { get; set; }
 
+    // points earned for that question (0 if the answer was wrong)
+    public double LastRoundPoints { get; set; } = 0;
+
     public double Score { get; set; } = 0;
 
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;

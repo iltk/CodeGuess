@@ -42,13 +42,19 @@ public class LeaderboardService : ILeaderboardService
 
     public async Task<PlayerStatResponse> GetPlayerStat(string joinCode, int playerId)
     {
+        var session = await _db.GetSessionAsync(joinCode);
+        var player = await GetPlayerAsync(session.Id, playerId);
         int playerPlace = await GetPlayerPlaceAsync(joinCode, playerId);
-        double playerScore = await GetPlayerScoreAsync(joinCode, playerId);
+
+        // LastRoundPoints belongs to the last question they answered; if that isn't
+        // the current one, they skipped it, so they got nothing this round
+        bool answeredThisRound = player.LastAnsweredPosition == session.CurrentQuestionPosition;
 
         return new PlayerStatResponse
         {
             Place = playerPlace,
-            Score = playerScore,
+            Score = player.Score,
+            RoundPoints = answeredThisRound ? player.LastRoundPoints : 0,
         };
     }
 
@@ -66,32 +72,30 @@ public class LeaderboardService : ILeaderboardService
             throw new KeyNotFoundException($"Player {playerId} not found in this game.");
         }
 
-        int playerPosition = 1;
+        int playerPlace = 1;
 
         foreach (Player player in players)
         {
             if (player.Id == playerId)
             {
-                return playerPosition;
+                return playerPlace;
             }
-            playerPosition++;
+            playerPlace++;
         }
 
         return 0;
     }
 
-    private async Task<double> GetPlayerScoreAsync(string joinCode, int playerId)
+    private async Task<Player> GetPlayerAsync(int sessionId, int playerId)
     {
-        var session = await _db.GetSessionAsync(joinCode);
-
         var player = await _db.Players
-            .FirstOrDefaultAsync(p => p.GameSessionId == session.Id && p.Id == playerId);
+            .FirstOrDefaultAsync(p => p.GameSessionId == sessionId && p.Id == playerId);
 
         if (player == null)
         {
             throw new KeyNotFoundException($"Player {playerId} not found in this game.");
         }
 
-        return player.Score;
+        return player;
     }
 }

@@ -43,13 +43,16 @@ public class AnswerService : IAnswerService
 
         if (!answer.IsCorrect)
         {
+            player.LastRoundPoints = 0;
             await _db.SaveChangesAsync();
             return false;
         }
 
         double responseTime = (double)((receivedAt - session.QuestionStartedAt)?.TotalSeconds ?? 0);
+        double pointsEarned = ScoreCalculator.Calculate(responseTime);
 
-        player.Score += ScoreCalculator.Calculate(responseTime);
+        player.Score += pointsEarned;
+        player.LastRoundPoints = pointsEarned;
         await _db.SaveChangesAsync();
         return true;
     }
