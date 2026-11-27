@@ -1,26 +1,51 @@
 @model LeaderBoardViewModel
+@{
+    ViewData["HideRain"] = true;
 
-<main>
-    <h1>@(Model.IsFinished ? "Result" : "LeaderBoard")</h1>
+    //get top 5 players
+    var top = Model.Players.OrderByDescending(p => p.Score).Take(5).ToList();
+    var maxScore = top.Count > 0 ? top[0].Score : 0;
+}
 
-    <ul>
-        @foreach (var player in Model.Players)
-        {
-            <li>@player.Nickname: @player.Score</li>
-        }
-    </ul>
+<main class="cg-board">
 
-    @if (Model.IsFinished)
+    <div class="cg-board-head">
+        <h1 class="cg-board-title">@(Model.IsFinished ? "Final results" : "Leaderboard")</h1>
+    </div>
+
+    @if (top.Count == 0)
     {
-        <a asp-controller="Host" asp-action="Index">
-            <button type="button">Back Home</button>
-        </a>
+        <p class="cg-board-empty">No players yet.</p>
     }
     else
     {
-        <form asp-controller="Host" asp-action="Advance" method="post">
-            <input type="hidden" name="joinCode" value="@Model.JoinCode" />
-            <button type="submit">Next</button>
-        </form>
+        <ol class="cg-board-list">
+            @for (var i = 0; i < top.Count; i++)
+            {
+                var player = top[i];
+                var pct = maxScore > 0 ? (int)Math.Round(player.Score / maxScore * 100) : 0;
+
+                <li class="cg-board-row">
+                    <span class="cg-board-rank">@((i + 1).ToString("00"))</span>
+
+                    <div class="cg-board-player">
+                        <span class="cg-board-name">@player.Nickname</span>
+                        <div class="cg-board-bar" aria-hidden="true">
+                            <span style="width: @pct%"></span>
+                        </div>
+                    </div>
+
+                    <span class="cg-board-pts">@player.Score.ToString("N0")</span>
+                </li>
+            }
+        </ol>
     }
+
+    <div class="cg-board-actions">
+        <form asp-controller="Host" asp-action="Advance" method="post">
+            <input type="hidden" name="joinCode" value="@Model.JoinCode"/>
+            <button type="submit" class="cg-form-btn cg-host-btn">Next question →</button>
+        </form>
+    </div>
+    
 </main>

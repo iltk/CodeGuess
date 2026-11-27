@@ -131,7 +131,7 @@ public class HostController : Controller
                 .ToList()
         };
 
-        return View(model);
+        return View(model.IsFinished ? "Final" : "LeaderBoard", model);
     }
 
     [HttpPost]
