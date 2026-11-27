@@ -1,0 +1,28 @@
+@model PlayGameViewModel
+
+<section id="finished-section" class="tab-content cg-scene cg-final" hidden>
+    <span class="cg-kicker">That's a wrap</span>
+    <h1 class="cg-display">Final results</h1>
+
+    <div id="final-place-box" class="cg-final-place">
+        <span class="cg-final-label">Your place</span>
+        <span id="final-place" class="cg-final-place-value">–</span>
+    </div>
+
+    <span id="final-podium" class="cg-final-podium" hidden>
+        You made the podium · Look at the big screen
+    </span>
+
+    <div class="cg-final-meta">
+        <div>
+            <span class="cg-final-label">Final score</span>
+            <span id="final-score" class="cg-final-score">0</span>
+        </div>
+        <div>
+            <span class="cg-final-label">Deck</span>
+            <span class="cg-final-deck">@Model.DeckName</span>
+        </div>
+    </div>
+
+    <a asp-controller="Play" asp-action="Index" class="cg-form-btn cg-final-btn">Play another game</a>
+</section>

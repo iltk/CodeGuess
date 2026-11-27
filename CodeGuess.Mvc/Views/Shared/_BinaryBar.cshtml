@@ -1,0 +1,9 @@
+@* Animated binary "waiting" bar *@
+@{
+    var barDigits = "101100111010010110001101011100";
+}
+
+<div class="cg-binbar" aria-hidden="true">
+    <span class="cg-binbar-base">@foreach (var digit in barDigits) { <span>@digit</span> }</span>
+    <span class="cg-binbar-hot">@foreach (var digit in barDigits) { <span>@digit</span> }</span>
+</div>

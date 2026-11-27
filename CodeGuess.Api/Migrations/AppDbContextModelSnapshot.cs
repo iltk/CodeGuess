@@ -105,6 +105,9 @@ namespace CodeGuess.Api.Migrations
                     b.Property<int?>("LastAnsweredPosition")
                         .HasColumnType("INTEGER");
 
+                    b.Property<double>("LastRoundPoints")
+                        .HasColumnType("REAL");
+
                     b.Property<string>("Nickname")
                         .IsRequired()
                         .HasMaxLength(20)

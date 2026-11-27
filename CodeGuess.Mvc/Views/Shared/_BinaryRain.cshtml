@@ -1,5 +1,4 @@
 @model string
-@* The falling digits column. Model is the side: "left" or "right" *@
 @{
     string Digits(int n) => string.Concat(Enumerable.Range(0, n).Select(_ => Random.Shared.Next(2) == 0 ? "0" : "1"));
 }

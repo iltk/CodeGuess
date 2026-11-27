@@ -1,0 +1,21 @@
+@model PlayGameViewModel
+
+<section id="lobby-section" class="tab-content cg-scene">
+    <p class="cg-kicker">You're in as</p>
+    <h1 class="cg-display" data-decode="@Model.Nickname">@Model.Nickname</h1>
+
+    <div class="cg-block">
+        <div class="cg-row-label">
+            <span>Waiting for the host<span class="cg-dots" aria-hidden="true"></span></span>
+            <span class="text-muted-cg">Standing by</span>
+        </div>
+
+        <partial name="_BinaryBar" />
+    </div>
+
+    <div class="cg-meta cg-meta-3">
+        <div><span class="cg-meta-label">Join code</span><span class="cg-meta-value">@Model.JoinCode</span></div>
+        <div><span class="cg-meta-label">Deck</span><span class="cg-meta-value cg-meta-text">@Model.DeckName</span></div>
+        <div><span class="cg-meta-label">Questions</span><span class="cg-meta-value">@Model.QuestionCount</span></div>
+    </div>
+</section>

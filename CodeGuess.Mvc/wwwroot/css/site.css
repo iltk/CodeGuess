@@ -110,6 +110,7 @@ a:hover {
   to   { transform: translateY(0); }
 }
 
+
 /* ==========================================================================
    HERO: cg-hero-*  (big CodeGuess title + tagline)
    ========================================================================== */
@@ -121,6 +122,7 @@ a:hover {
 .cg-hero-guess { color: var(--color-accent); }
 .cg-hero-scramble { color: var(--color-sage-scramble); }
 .cg-hero-tagline { font-size: 19px; color: var(--color-text-secondary); }
+
 
 /* ==========================================================================
    PANEL: cg-panel-*  (box with the Join/Host tabs)
@@ -136,6 +138,7 @@ a:hover {
 .cg-panel-tab + .cg-panel-tab { border-left: 1.5px solid var(--color-ink); }
 .cg-panel-tab.active { background: var(--color-ink); color: var(--color-paper); }
 a.cg-panel-tab:hover { background: var(--color-accent); color: var(--color-surface); }
+
 
 /* ==========================================================================
    FORM: cg-form-*  (labels, inputs, buttons, messages)
@@ -166,8 +169,9 @@ a.cg-panel-tab:hover { background: var(--color-accent); color: var(--color-surfa
 .cg-form-hint  { font-size: 15px; color: var(--color-text-muted); }
 .cg-form-error { display: block; font-size: 15px; color: var(--color-signal); }
 
+
 /* ==========================================================================
-   PLAYER LOBBY: nickname, waiting bar, game details (Play/Game.cshtml)
+   PLAYER LOBBY (P1): nickname, waiting bar, game details (Play/Game.cshtml)
    ========================================================================== */
 
 /* No display rule here: it would override the hidden attribute */
@@ -191,6 +195,7 @@ a.cg-panel-tab:hover { background: var(--color-accent); color: var(--color-surfa
   display: flex; justify-content: space-between; gap: 16px;
   margin-bottom: 8px;
   font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  text-transform: uppercase;
 }
 .text-muted-cg { color: var(--color-text-muted); font-weight: 400; }
 .cg-hint { margin: 12px 0 0; font-size: 15px; color: var(--color-text-muted); }
@@ -199,6 +204,7 @@ a.cg-panel-tab:hover { background: var(--color-accent); color: var(--color-surfa
 .cg-meta {
   display: grid;
   border: 1.5px solid var(--color-ink); background: var(--color-surface);
+  text-align: left;
 }
 .cg-meta > div { min-width: 0; padding: 12px; }
 .cg-meta > div + div { border-left: 1.5px solid var(--color-ink); }
@@ -245,3 +251,249 @@ a.cg-panel-tab:hover { background: var(--color-accent); color: var(--color-surfa
 @keyframes cg-dots {
   0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; }
 }
+
+
+/* ==========================================================================
+   ANSWERING (D1) + LOCKED IN (D2)
+   ========================================================================== */
+.cg-scene-wide { max-width: 920px; }
+
+.cg-answer-head { margin-bottom: 16px; }
+
+/* Answering fills the space between header and footer, top-aligned:
+   <main> → #game → #in-progress-section → #answering-view → .cg-options each grow (flex: 1).
+   data-view is set by showRoundView, so this only applies while answering. */
+main[data-view="answering-view"] #in-progress-section { flex: 1; display: flex; flex-direction: column; }
+#answering-view:not([hidden]) { flex: 1; display: flex; flex-direction: column; padding: 32px 40px; }
+
+/* answer options: 2 × 2, both rows stretch to share the height */
+.cg-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  flex: 1;
+  min-height: 420px;   /* floor on short windows */
+}
+/* An option is a big letter at the top-left and a small binary code at the bottom-right
+   (letters only: the answer text is on the host's big screen) */
+.cg-option {
+  display: flex; flex-direction: column; justify-content: space-between;
+  min-height: 200px; padding: 22px 26px;
+  border: 1.5px solid var(--color-ink); border-radius: 0;
+  text-align: left;
+  font-family: var(--font-mono);
+  transition: transform .15s ease;
+}
+.cg-option[hidden] { display: none; }   /* display:flex above would otherwise override hidden */
+button.cg-option { cursor: pointer; }
+button.cg-option:hover  { transform: translateY(-3px); }
+button.cg-option:active { transform: scale(.98); }
+
+.cg-option-letter {
+  font-size: clamp(72px, 8vw, 120px); font-weight: 700;
+  line-height: .85; letter-spacing: -.05em;
+}
+.cg-option-code { align-self: flex-end; font-size: 18px; opacity: .75; }
+
+/* colour per position */
+.cg-option-0 { background: var(--color-ink);      color: var(--color-paper); }
+.cg-option-1 { background: var(--color-surface);  color: var(--color-ink); }
+.cg-option-2 { background: var(--color-accent);   color: var(--color-surface); }
+.cg-option-3 { background: var(--color-sage-100); color: var(--color-accent-deep); }
+
+/* locked in: the chosen option, smaller and centred */
+.cg-option-locked { width: 220px; height: 220px; min-height: 0; margin: 0 auto 28px; }
+.cg-locked-head { margin-bottom: 28px; }
+.cg-locked-head .cg-display { margin-bottom: 8px; }
+.cg-locked-head .cg-hint { margin: 4px 0 0; }
+
+@media (max-width: 600px) {
+  #answering-view:not([hidden]) { padding: 16px; }
+  .cg-options { min-height: 0; }
+  .cg-option  { min-height: 150px; padding: 16px; }
+}
+
+
+/* ==========================================================================
+   RESULT PANEL: D3 correct / D4 wrong / D5 time's up
+   ========================================================================== */
+.cg-result {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding: 40px;
+  box-sizing: border-box;
+  color: var(--color-paper);
+  text-align: left;
+}
+.cg-result.is-correct { background: var(--color-accent); }
+.cg-result.is-wrong   { background: var(--color-ink); }
+
+/* paint the whole main area between the gutters.
+   data-view and data-result are set in Play/Game.cshtml */
+main[data-view="time-up-view"],
+main[data-view="result-view"][data-result="wrong"]   { background: var(--color-ink); }
+main[data-view="result-view"][data-result="correct"] { background: var(--color-accent); }
+
+/* lobby styles, adjusted for inside the panel */
+.cg-result .cg-kicker {
+  margin: 0;
+  letter-spacing: .12em;
+  color: inherit;
+  opacity: .75;
+}
+.cg-result .cg-display {
+  margin: 0;
+  font-size: clamp(44px, 6vw, 88px);
+  line-height: .95;
+  letter-spacing: -.05em;
+}
+
+/* D3: pale mint for secondary text on green */
+.cg-result.is-correct .cg-kicker,
+.cg-result.is-correct .cg-meta-label,
+.cg-result.is-correct .cg-gain-unit { color: #CFE3D7; opacity: 1; }
+
+/* big "+842 PTS" */
+.cg-gain { display: flex; align-items: baseline; gap: 12px; }
+.cg-gain-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: clamp(88px, 10vw, 150px);
+  line-height: .85;
+  letter-spacing: -.05em;
+}
+.cg-gain-unit {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  text-transform: uppercase;
+  opacity: .75;
+}
+
+/* stats box: Place | Total (+ a note across the bottom on time's up) */
+.cg-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1.5px solid currentColor;
+}
+
+.cg-stats > div { display: flex; flex-direction: column; gap: 4px; padding: 16px; min-width: 0; }
+.cg-stats > div + div { border-left: 1.5px solid currentColor; }
+
+.cg-stats .cg-meta-label { font-size: 12px; color: inherit; opacity: .75; }
+.cg-stats .cg-meta-value { font-size: 26px; white-space: nowrap; }
+
+.cg-stats-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 16px;
+  border-top: 1.5px solid currentColor;
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+/* phones: stack the stats */
+@media (max-width: 600px) {
+  .cg-result { padding: 28px 20px; }
+  .cg-stats { grid-template-columns: 1fr; }
+  .cg-stats > div + div { border-left: 0; border-top: 1.5px solid currentColor; }
+}
+
+
+
+/* ==========================================================================
+   FINAL RESULTS: cg-final-*  (Play/_Finished.cshtml)
+   ========================================================================== */
+
+/* :not([hidden]) so display:flex doesn't override the hidden attribute */
+.cg-final:not([hidden]) {
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+  text-align: center;
+}
+.cg-final .cg-kicker,
+.cg-final .cg-display { margin: 0; }
+
+.cg-final-label {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  text-transform: uppercase; color: var(--color-text-muted);
+}
+
+/* big place number, green when on the podium */
+.cg-final-place { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.cg-final-place-value {
+  font-family: var(--font-mono); font-weight: 700;
+  font-size: clamp(96px, 16vw, 200px); line-height: .9; letter-spacing: -.06em;
+}
+.cg-final-place.is-podium .cg-final-place-value { color: var(--color-accent); }
+
+.cg-final-podium {
+  padding: 6px 12px;
+  background: var(--color-accent); color: var(--color-surface);
+  font-family: var(--font-mono); font-size: 13px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+
+/* Final score | Deck */
+.cg-final-meta {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%; max-width: 600px;
+  border: 1.5px solid var(--color-ink); background: var(--color-surface);
+  text-align: left;
+}
+.cg-final-meta > div { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; min-width: 0; }
+.cg-final-meta > div + div { border-left: 1.5px solid var(--color-ink); }
+.cg-final-score { font-family: var(--font-mono); font-weight: 700; font-size: 26px; }
+.cg-final-deck  { font-weight: 600; font-size: 17px; overflow-wrap: anywhere; }
+
+/* <a> styled as .cg-form-btn: centre the text, and beat the global a / a:hover colours */
+.cg-final-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 32px; margin-top: 8px;
+  text-decoration: none;
+}
+.cg-final-btn,
+.cg-final-btn:hover { color: var(--color-surface); }
+
+@media (max-width: 575.98px) {
+  .cg-final-meta { grid-template-columns: 1fr; }
+  .cg-final-meta > div + div { border-left: 0; border-top: 1.5px solid var(--color-ink); }
+}
+
+/* ==========================================================================
+   GET READY: cg-ready-*  (Play/_GetReady.cshtml)
+   ========================================================================== */
+
+/* :not([hidden]) so display:flex doesn't override the hidden attribute */
+.cg-ready:not([hidden]) {
+  display: flex; flex-direction: column; align-items: center; gap: 28px;
+  text-align: center;
+}
+.cg-ready .cg-kicker,
+.cg-ready .cg-display { margin: 0; }
+
+.cg-display-xl { font-size: clamp(48px, 9vw, 112px); line-height: .95; letter-spacing: -.05em; }
+
+/* 3 bars that light up one after another: green → black → sage */
+.cg-ready-bars {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+  width: 100%; max-width: 420px;
+}
+.cg-ready-bars span {
+  height: 8px;
+  background: var(--color-sage-100);
+  animation: cg-ready 1.8s steps(1) infinite;
+}
+.cg-ready-bars span:nth-child(2) { animation-delay: .6s; }
+.cg-ready-bars span:nth-child(3) { animation-delay: 1.2s; }
+
+@keyframes cg-ready {
+  0%  { background: var(--color-accent); }
+  33% { background: var(--color-ink); }
+  66% { background: var(--color-sage-100); }
+}
+
+.cg-ready-hint { margin: 0; font-size: 17px; color: var(--color-text-muted); }
